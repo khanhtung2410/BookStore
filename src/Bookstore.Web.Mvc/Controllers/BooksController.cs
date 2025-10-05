@@ -1,0 +1,111 @@
+﻿    using Bookstore.Books;
+using Bookstore.Books.Dto;
+using Bookstore.Controllers;
+using Bookstore.Entities;
+using Bookstore.Web.Models.Books;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Bookstore.Web.Controllers
+{
+    public class BooksController : BookstoreControllerBase
+    {
+        private readonly IBookAppService _bookAppService;
+
+        public BooksController(IBookAppService bookAppService)
+        {
+            _bookAppService = bookAppService;
+        }
+
+        public async Task<ActionResult> Index(int page = 1)
+        {
+            var books = await _bookAppService.GetAllBooks() ?? new List<ListBookDto>();
+
+            var booksPerPage = 10;
+            var pagedBooks = books
+                .Skip((page - 1) * booksPerPage)
+                .Take(booksPerPage)
+                .ToList();
+            var model = new Models.Books.BookListViewModel
+            {
+                Books = pagedBooks,   
+                CurrentPage = page,
+                TotalPages = (books != null)
+            ? (int)Math.Ceiling(books.Count / 10.0)
+            : 0
+            };
+
+            return View(model);
+        }
+
+
+        public ActionResult Create()
+        {
+            var model = new Models.Books.BookCreatePageViewModel();
+            model.Book = new Models.Books.BookCreateViewModel();
+
+            model.Book.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
+            .Cast<BookConsts.Genre>()
+            .Select(g => new SelectListItem
+            {
+                Value = g.ToString(),
+                Text = g.ToString()
+            }).ToList();
+            
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(BookCreatePageViewModel model)
+        {
+            // Validate presence of nested objects
+            if (model?.Book == null || model.Book.Inventory == null)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid book data. Please fill in all fields.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                // Ensure model and nested Book are not null so the view can render safely
+                model ??= new BookCreatePageViewModel();
+                model.Book ??= new BookCreateViewModel();
+
+                // Repopulate GenreList for the select element
+                model.Book.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
+                    .Cast<BookConsts.Genre>()
+                    .Select(g => new SelectListItem
+                    {
+                        Value = g.ToString(),
+                        Text = g.ToString()
+                    }).ToList();
+
+                return View(model);
+            }
+
+            var dto = new CreateBookDto
+            {
+                Title = model.Book.Title,
+                Author = model.Book.Author,
+                Genre = model.Book.Genre,
+                Description = model.Book.Description,
+                PublishedDate = model.Book.PublishedDate,
+                Inventory = new CreateBookInventoryDto
+                {
+                    Amount = model.Book.Inventory.Amount,
+                    BuyPrice = model.Book.Inventory.BuyPrice,
+                    SellPrice = model.Book.Inventory.SellPrice
+                }
+            };
+
+            await _bookAppService.CreateBook(dto);
+
+            // On success, redirect to the list page
+            return RedirectToAction(nameof(Index));
+        }
+    }
+}
