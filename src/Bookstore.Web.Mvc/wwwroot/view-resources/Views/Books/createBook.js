@@ -10,7 +10,7 @@
             abp.notify.success("Book created successfully!");
             setTimeout(function () {
                 window.location.href = '/Books';
-            }, 1000);
+            }, 800);
         },
         error: function (xhr) {
             abp.notify.error("Error creating book");

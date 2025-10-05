@@ -107,5 +107,14 @@ namespace Bookstore.Web.Controllers
             // On success, redirect to the list page
             return RedirectToAction(nameof(Index));
         }
+
+        public ActionResult Delete(int id)
+        {
+            var model = new Models.Books.BookDeleteViewModel
+            {
+                Id = id
+            };
+            return View(model);
+        }
     }
 }

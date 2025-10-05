@@ -69,6 +69,57 @@ namespace Bookstore.Tests.Books
 
         #endregion
 
+        #region Delete Tests
+
+        [Theory]
+        [InlineData(true)] // Delete existing book
+        [InlineData(false)] // Try to delete non-existent book
+        public async Task DeleteBook_Test(bool createFirst)
+        {
+            int bookId;
+            if (createFirst)
+            {
+                var input = new CreateBookDto
+                {
+                    Title = "Delete Test Book",
+                    Author = "Delete Author",
+                    Genre = BookConsts.Genre.Fiction,
+                    Description = "Delete Description",
+                    PublishedDate = DateTime.Now,
+                    Inventory = new CreateBookInventoryDto
+                    {
+                        Amount = 1,
+                        BuyPrice = 1.0m,
+                        SellPrice = 2.0m
+                    }
+                };
+                bookId = await _bookAppService.CreateBook(input);
+            }
+            else
+            {
+                // Use a high, likely non-existent ID
+                bookId = int.MaxValue;
+            }
+
+            var deleteDto = new DeleteBookDto { Id = bookId };
+            if (createFirst)
+            {
+                // Should not throw
+                await _bookAppService.DeleteBook(deleteDto);
+                // Verify book is deleted
+                var books = await _bookAppService.GetAllBooks();
+                Assert.DoesNotContain(books, b => b.Id == bookId);
+            }
+            else
+            {
+                // Should not throw, but nothing happens
+                await _bookAppService.DeleteBook(deleteDto);
+                // No assertion needed, just ensure no exception
+            }
+        }
+
+        #endregion
+
         #region Validation Tests
 
         [Theory]

@@ -50,10 +50,9 @@ namespace Bookstore.Books
             throw new NotImplementedException();
         }
 
-        public Task DeleteBook(DeleteBookDto input)
+        public async Task DeleteBook(DeleteBookDto input)
         {
-            _bookRepository.Delete(input.Id);
-            return Task.CompletedTask;
+           await _bookRepository.DeleteAsync(input.Id);
         }
 
         public async Task<List<ListBookDto>> GetAllBooks()
@@ -69,7 +68,7 @@ namespace Bookstore.Books
         }
 
 
-        public Task UpdateBook(UpdateBookDto input)
+        public async Task UpdateBook(UpdateBookDto input)
         {
             throw new NotImplementedException();
         }

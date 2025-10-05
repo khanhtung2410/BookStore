@@ -29,4 +29,13 @@ namespace Bookstore.Web.Models.Books
         public decimal BuyPrice { get; set; }
         public decimal SellPrice { get; set; }
     }
+
+    public class BookDeleteViewModel
+    {
+        [Required]
+        public int Id { get; set; }
+
+        [Display(Name = "Book Title")]
+        public string Title { get; set; }
+    }
 }
