@@ -108,13 +108,18 @@ namespace Bookstore.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public ActionResult Delete(int id)
+        [HttpPost]
+        [ValidateAntiForgeryToken] 
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var model = new Models.Books.BookDeleteViewModel
+            var book = await _bookAppService.GetBook(id);
+            if (book == null)
             {
-                Id = id
-            };
-            return View(model);
+                return NotFound();
+            }
+            await _bookAppService.DeleteBook(new DeleteBookDto { Id = id});
+            TempData["SuccessMessage"] = $"“{book.Title}” was deleted successfully.";
+            return RedirectToAction(nameof(Index));
         }
     }
 }
