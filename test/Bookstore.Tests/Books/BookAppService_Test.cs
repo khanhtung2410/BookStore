@@ -52,7 +52,7 @@ namespace Bookstore.Tests.Books
             Assert.NotNull(createdBook);
             Assert.Equal("Test Book", createdBook.Title);
             Assert.Equal("Test Author", createdBook.Author);
-            Assert.Equal(BookConsts.Genre.Fiction.ToString(), createdBook.Genre);
+            Assert.Equal(BookConsts.Genre.Fiction, createdBook.Genre);
             Assert.Equal("Test Description", createdBook.Description);
             Assert.Equal(input.PublishedDate, createdBook.PublishedDate);
 
@@ -207,6 +207,69 @@ namespace Bookstore.Tests.Books
             };
 
             await Assert.ThrowsAsync<AbpValidationException>(() => _bookAppService.CreateBook(input));
+        }
+
+        #endregion
+
+        #region Update Tests
+
+        [Fact]
+        public async Task UpdateBook_Test()
+        {
+            // Create a book first
+            var createInput = new CreateBookDto
+            {
+                Title = "Original Title",
+                Author = "Original Author",
+                Genre = BookConsts.Genre.Fiction,
+                Description = "Original Description",
+                PublishedDate = DateTime.Now,
+                Inventory = new CreateBookInventoryDto
+                {
+                    Amount = 5,
+                    BuyPrice = 10.0m,
+                    SellPrice = 15.0m
+                }
+            };
+            var bookId = await _bookAppService.CreateBook(createInput);
+
+            // Prepare update
+            var updateInput = new UpdateBookDto
+            {
+                Id = bookId,
+                Title = "Updated Title",
+                Author = "Updated Author",
+                Genre = BookConsts.Genre.NonFiction,
+                Description = "Updated Description",
+                PublishedDate = DateTime.Now.AddDays(1),
+                Inventory = new UpdateBookInventoryDto
+                {
+                    Amount = 7,
+                    BuyPrice = 12.0m,
+                    SellPrice = 18.0m
+                }
+            };
+
+            await _bookAppService.UpdateBook(updateInput);
+
+            // Get and assert
+            var updatedBook = await _bookAppService.GetBook(bookId);
+            Assert.NotNull(updatedBook);
+            Assert.Equal("Updated Title", updatedBook.Title);
+            Assert.Equal("Updated Author", updatedBook.Author);
+            Assert.Equal(BookConsts.Genre.NonFiction, updatedBook.Genre);
+            Assert.Equal("Updated Description", updatedBook.Description);
+            Assert.Equal(updateInput.PublishedDate, updatedBook.PublishedDate);
+
+            // Check inventory
+            UsingDbContext(context =>
+            {
+                var inventory = context.BookInventories.FirstOrDefault(x => x.BookId == bookId);
+                Assert.NotNull(inventory);
+                Assert.Equal(7, inventory.Amount);
+                Assert.Equal(12.0m, inventory.BuyPrice);
+                Assert.Equal(18.0m, inventory.SellPrice);
+            });
         }
 
         #endregion

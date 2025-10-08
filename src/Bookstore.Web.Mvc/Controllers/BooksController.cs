@@ -42,6 +42,15 @@ namespace Bookstore.Web.Controllers
             return View(model);
         }
 
+        public async Task<ActionResult> Details(int id)
+        {
+            var book = await _bookAppService.GetBook(id);
+            if (book == null)
+            {
+                return NotFound();
+            }
+            return View(book);
+        }
 
         public ActionResult Create()
         {
@@ -110,7 +119,7 @@ namespace Bookstore.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken] 
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var book = await _bookAppService.GetBook(id);
             if (book == null)
@@ -118,8 +127,87 @@ namespace Bookstore.Web.Controllers
                 return NotFound();
             }
             await _bookAppService.DeleteBook(new DeleteBookDto { Id = id});
-            TempData["SuccessMessage"] = $"“{book.Title}” was deleted successfully.";
+            return Ok();
+        }
+
+        public async Task<ActionResult> Update(int id) {
+            var book = await _bookAppService.GetBook(id);
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+         
+            var model = new BookUpdateViewModel
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                Description = book.Description,
+                PublishedDate = book.PublishedDate,
+                Genre = book.Genre,
+                Inventory = book.Inventory != null ?
+                new BookInventoryViewModel
+                {
+                    Amount = book.Inventory.Amount,
+                    BuyPrice = book.Inventory.BuyPrice,
+                    SellPrice = book.Inventory.SellPrice
+                } : new BookInventoryViewModel()
+            };
+
+            model.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
+                .Cast<BookConsts.Genre>()
+                .Select(g => new SelectListItem
+                {
+                    Value = g.ToString(),
+                    Text = g.ToString(),
+                    Selected = g.ToString() == model.Genre.ToString()
+                }).ToList();
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Update(int id, BookUpdateViewModel model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
+               .Cast<BookConsts.Genre>()
+               .Select(g => new SelectListItem
+               {
+                   Value = g.ToString(),
+                   Text = g.ToString(),
+                   Selected = g.ToString() == model.Genre.ToString()
+               }).ToList();
+                return View(model);
+            }
+
+            var dto = new UpdateBookDto
+            {
+                Id = model.Id,
+                Title = model.Title,
+                Author = model.Author,
+                Description = model.Description,
+                PublishedDate = model.PublishedDate,
+                Genre = model.Genre,
+                Inventory = new UpdateBookInventoryDto
+                {
+                    Amount = model.Inventory.Amount,
+                    BuyPrice = model.Inventory.BuyPrice,
+                    SellPrice = model.Inventory.SellPrice
+                }
+            };
+
+            await _bookAppService.UpdateBook(dto);
             return RedirectToAction(nameof(Index));
+
         }
     }
 }

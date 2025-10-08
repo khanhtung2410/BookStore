@@ -16,6 +16,8 @@ namespace Bookstore.Books.Dto
                 .ForMember(dest =>dest.Genre,opt =>opt.MapFrom(src =>src.Genre.ToString()));
             CreateMap<CreateBookDto, Book>()
                 .ForMember(dest => dest.Genre, opt => opt.MapFrom(src => src.Genre.ToString()));
+            CreateMap<UpdateBookDto, Book>()
+              .ForMember(dest => dest.Genre, opt => opt.MapFrom(src => src.Genre.ToString()));
             CreateMap<Book, ListBookDto>()
                 .ForMember(des => des.Genre, opt => opt.MapFrom(src => src.Genre.ToString()));
         }

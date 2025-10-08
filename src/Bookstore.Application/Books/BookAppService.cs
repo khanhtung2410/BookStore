@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services;
 using Abp.Domain.Repositories;
+using Abp.UI;
 using Bookstore.Books.Dto;
 using Bookstore.Entities;
 using System;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Schema;
 
 namespace Bookstore.Books
 {
@@ -64,13 +66,59 @@ namespace Bookstore.Books
         public async Task<BookDto> GetBook(int id)
         {
             var book = await _bookRepository.GetAsync(id);
-            return ObjectMapper.Map<BookDto>(book);
-        }
+            var inventory = await _bookInventoryRepository.FirstOrDefaultAsync(bi => bi.BookId == id);
 
+            var dto = ObjectMapper.Map<BookDto>(book);
+
+            if (inventory != null)
+            {
+                dto.Inventory = new BookInventoryDto
+                {
+                    Id = inventory.Id,
+                    BookId = inventory.BookId,
+                    Amount = (int)inventory.Amount,
+                    BuyPrice = inventory.BuyPrice,
+                    SellPrice = inventory.SellPrice
+                };
+            }
+
+            return dto;
+        }
 
         public async Task UpdateBook(UpdateBookDto input)
         {
-            throw new NotImplementedException();
+            var book = await _bookRepository.GetAsync(input.Id);
+            if(book == null)
+            {
+                throw new UserFriendlyException("Book not found");
+            }
+            book.Title = input.Title;
+            book.Author = input.Author;
+            book.Description = input.Description;
+            book.PublishedDate = input.PublishedDate;
+            book.Genre = input.Genre;
+            if(input.Inventory != null)
+            {
+                var inventory = await _bookInventoryRepository.FirstOrDefaultAsync(bi => bi.BookId == book.Id);
+                if(inventory != null)
+                {
+                    inventory.Amount = input.Inventory.Amount;
+                    inventory.BuyPrice = input.Inventory.BuyPrice;
+                    inventory.SellPrice = input.Inventory.SellPrice;
+                    await _bookInventoryRepository.UpdateAsync(inventory);
+                }
+                else
+                {
+                    // Create new inventory if not exists
+                    var newInventory = new BookInventory(
+                        book.Id,
+                        input.Inventory.Amount,
+                        input.Inventory.BuyPrice,
+                        input.Inventory.SellPrice
+                    );
+                    await _bookInventoryRepository.InsertAsync(newInventory);
+                }
+            }
         }
 
         public Task UpdateBooks(UpdateBooksDto input)
