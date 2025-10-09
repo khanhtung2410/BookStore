@@ -13,6 +13,10 @@ namespace Bookstore.EntityFrameworkCore
         public DbSet<BookInventory> BookInventories { get; set; }
         public DbSet<BookImage> BookImages { get; set; }
         public DbSet<BookEdition> BookEditions { get; set; }
+        public DbSet<BookBundle> BookBundles { get; set; }
+        public DbSet<BookBundleItem> BookBundleItems { get; set; }
+        public DbSet<BookBundleImage> BookBundleImages { get; set; }
+        public DbSet<BookDiscount> BookDiscounts { get; set; }
         public BookstoreDbContext(DbContextOptions<BookstoreDbContext> options)
             : base(options)
         {

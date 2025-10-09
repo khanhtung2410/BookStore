@@ -4,6 +4,7 @@ using Bookstore.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bookstore.Migrations
 {
     [DbContext(typeof(BookstoreDbContext))]
-    partial class BookstoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251009055902_add bundle db")]
+    partial class addbundledb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1781,57 +1784,6 @@ namespace Bookstore.Migrations
                     b.ToTable("BookBundleItems");
                 });
 
-            modelBuilder.Entity("Bookstore.Entities.BookDiscount", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BookEditionId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("DiscountValue")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPercentage")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookEditionId");
-
-                    b.ToTable("BookDiscounts");
-                });
-
             modelBuilder.Entity("Bookstore.Entities.BookEdition", b =>
                 {
                     b.Property<int>("Id")
@@ -1854,6 +1806,11 @@ namespace Bookstore.Migrations
 
                     b.Property<DateTime?>("DeletionTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("EditionName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("Format")
                         .HasColumnType("int");
@@ -1949,7 +1906,10 @@ namespace Bookstore.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BookEditionId")
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("BookId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("BuyPrice")
@@ -1979,13 +1939,9 @@ namespace Bookstore.Migrations
                     b.Property<decimal>("SellPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<long>("StockQuantity")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("BookEditionId")
-                        .IsUnique();
+                    b.HasIndex("BookId");
 
                     b.ToTable("BookInventories");
                 });
@@ -2302,17 +2258,6 @@ namespace Bookstore.Migrations
                     b.Navigation("Bundle");
                 });
 
-            modelBuilder.Entity("Bookstore.Entities.BookDiscount", b =>
-                {
-                    b.HasOne("Bookstore.Entities.BookEdition", "BookEdition")
-                        .WithMany()
-                        .HasForeignKey("BookEditionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BookEdition");
-                });
-
             modelBuilder.Entity("Bookstore.Entities.BookEdition", b =>
                 {
                     b.HasOne("Bookstore.Entities.Book", "Book")
@@ -2337,13 +2282,13 @@ namespace Bookstore.Migrations
 
             modelBuilder.Entity("Bookstore.Entities.BookInventory", b =>
                 {
-                    b.HasOne("Bookstore.Entities.BookEdition", "BookEdition")
-                        .WithOne("BookInventory")
-                        .HasForeignKey("Bookstore.Entities.BookInventory", "BookEditionId")
+                    b.HasOne("Bookstore.Entities.Book", "Book")
+                        .WithMany("Inventories")
+                        .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("BookEdition");
+                    b.Navigation("Book");
                 });
 
             modelBuilder.Entity("Bookstore.MultiTenancy.Tenant", b =>
@@ -2449,6 +2394,8 @@ namespace Bookstore.Migrations
                     b.Navigation("Editions");
 
                     b.Navigation("Images");
+
+                    b.Navigation("Inventories");
                 });
 
             modelBuilder.Entity("Bookstore.Entities.BookBundle", b =>
@@ -2456,11 +2403,6 @@ namespace Bookstore.Migrations
                     b.Navigation("BundleItems");
 
                     b.Navigation("Images");
-                });
-
-            modelBuilder.Entity("Bookstore.Entities.BookEdition", b =>
-                {
-                    b.Navigation("BookInventory");
                 });
 #pragma warning restore 612, 618
         }

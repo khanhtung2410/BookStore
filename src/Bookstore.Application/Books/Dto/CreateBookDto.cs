@@ -9,12 +9,28 @@ using System.Threading.Tasks;
 
 namespace Bookstore.Books.Dto
 {
-    public class CreateBookInventoryDto 
-    { 
-        [Required(ErrorMessage = "Inventory amount is required.")]
-        [Range(0, long.MaxValue, ErrorMessage = "Amount must be a non-negative number.")]
-        public long Amount { get; set; }
+    public class CreateBookEditionDto
+    {
+        [Required]
+        public BookConsts.Format Format { get; set; }
 
+        [Required]
+        [StringLength(100)]
+        public string Publisher { get; set; }
+
+        [Required]
+        public DateTime? PublishedDate { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string ISBN { get; set; }
+
+        [Required]
+        public CreateBookInventoryDto Inventory { get; set; } // Added inventory to edition
+    }
+
+    public class CreateBookInventoryDto
+    {
         [Required(ErrorMessage = "Inventory buy price is required.")]
         [Range(0.0, double.MaxValue, ErrorMessage = "Buy price must be a non-negative number.")]
         public decimal BuyPrice { get; set; }
@@ -22,6 +38,10 @@ namespace Bookstore.Books.Dto
         [Required(ErrorMessage = "Inventory sell price is required.")]
         [Range(0.0, double.MaxValue, ErrorMessage = "Sell price must be a non-negative number.")]
         public decimal SellPrice { get; set; }
+
+        [Required]
+        [Range(0, long.MaxValue, ErrorMessage = "Stock quantity must be a non-negative number.")]
+        public long StockQuantity { get; set; }
     }
 
     [AutoMapTo(typeof(Book))]
@@ -42,10 +62,8 @@ namespace Bookstore.Books.Dto
         [StringLength(BookConsts.MaxDescriptionLength)]
         public string Description { get; set; }
 
-        public DateTime? PublishedDate { get; set; }
-
-        [Required(ErrorMessage = "Inventory is required.")]
-        public CreateBookInventoryDto Inventory { get; set; }
+        [Required]
+        public List<CreateBookEditionDto> Editions { get; set; } = new List<CreateBookEditionDto>();
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
@@ -53,13 +71,16 @@ namespace Bookstore.Books.Dto
             {
                 yield return new ValidationResult("Genre is required and must be a valid value.", new[] { nameof(Genre) });
             }
-            if (PublishedDate.HasValue && PublishedDate.Value > DateTime.Now.AddYears(1))
+            if (Editions == null || Editions.Count == 0)
             {
-                yield return new ValidationResult("Published date cannot be more than 1 years in the future.", new[] { nameof(PublishedDate) });
+                yield return new ValidationResult("At least one edition is required.", new[] { nameof(Editions) });
             }
-            if (Inventory == null)
+            foreach (var edition in Editions)
             {
-                yield return new ValidationResult("Inventory is required.", new[] { nameof(Inventory) });
+                if (edition.Inventory == null)
+                {
+                    yield return new ValidationResult("Inventory is required for each edition.", new[] { nameof(Editions) });
+                }
             }
         }
     }

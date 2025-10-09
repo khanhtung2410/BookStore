@@ -1,4 +1,5 @@
-﻿using Bookstore.Entities;
+﻿using Abp.AutoMapper;
+using Bookstore.Entities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -8,64 +9,66 @@ using System.Threading.Tasks;
 
 namespace Bookstore.Books.Dto
 {
-    public class UpdateBookInventoryDto
-    {
-        [Required(ErrorMessage = "Inventory amount is required.")]
-        [Range(0, long.MaxValue, ErrorMessage = "Amount must be a non-negative number.")]
-        public long Amount { get; set; }
-
-        [Required(ErrorMessage = "Inventory buy price is required.")]
-        [Range(0.0, double.MaxValue, ErrorMessage = "Buy price must be a non-negative number.")]
-        public decimal BuyPrice { get; set; }
-
-        [Required(ErrorMessage = "Inventory sell price is required.")]
-        [Range(0.0, double.MaxValue, ErrorMessage = "Sell price must be a non-negative number.")]
-        public decimal SellPrice { get; set; }
-    }
-    public class UpdateBookDto : IValidatableObject
+    public class UpdateBookEditionDto
     {
         public int Id { get; set; }
+        [Required]
+        public int BookId { get; set; }
+        [Required]
+        public BookConsts.Format Format { get; set; }
+        [Required]
+        [StringLength(100)]
+        public string Publisher { get; set; }
+        [Required]
+        public DateTime? PublishedDate { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string ISBN { get; set; }
 
         [Required]
+        public CreateBookInventoryDto Inventory { get; set; } // Moved here
+    }
+
+    [AutoMapTo(typeof(Book))]
+    public class UpdateBookDto : IValidatableObject
+    {
+        [Required]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Title is required.")]
         [StringLength(BookConsts.MaxTitleLength)]
         public string Title { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Author is required.")]
         [StringLength(BookConsts.MaxAuthorLength)]
         public string Author { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Genre is required.")]
+        public BookConsts.Genre Genre { get; set; }
+
+        [Required(ErrorMessage = "Description is required.")]
         [StringLength(BookConsts.MaxDescriptionLength)]
         public string Description { get; set; }
 
-        public DateTime? PublishedDate { get; set; }
-
         [Required]
-        public BookConsts.Genre Genre { get; set; }
+        public List<UpdateBookEditionDto> Editions { get; set; } = new List<UpdateBookEditionDto>();
 
-        [Required(ErrorMessage = "Iventory required.")]
-        public UpdateBookInventoryDto Inventory { get; set; }
-
-        // Validate
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (PublishedDate.HasValue && PublishedDate.Value > DateTime.Now.AddYears(1))
-            {
-                yield return new ValidationResult(
-                    "Published date cannot be more than 1 years in the future.",
-                    new[] { nameof(PublishedDate) }
-                );
-            }
             if (!Enum.IsDefined(typeof(BookConsts.Genre), Genre))
             {
-                yield return new ValidationResult(
-                    "Please select a valid genre.",
-                    new[] { nameof(Genre) }
-                );
+                yield return new ValidationResult("Genre is required and must be a valid value.", new[] { nameof(Genre) });
             }
-            if (Inventory == null)
+            if (Editions == null || Editions.Count == 0)
             {
-                yield return new ValidationResult("Inventory is required.", new[] { nameof(Inventory) });
+                yield return new ValidationResult("At least one edition is required.", new[] { nameof(Editions) });
+            }
+            foreach (var edition in Editions)
+            {
+                if (edition.Inventory == null)
+                {
+                    yield return new ValidationResult("Inventory is required for each edition.", new[] { nameof(Editions) });
+                }
             }
         }
     }

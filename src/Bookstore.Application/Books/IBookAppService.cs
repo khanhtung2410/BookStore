@@ -13,9 +13,7 @@ namespace Bookstore.Books
     public interface IBookAppService : IApplicationService
     {
         Task<int> CreateBook(CreateBookDto input);
-        Task CreateBooks(CreateBooksDto input);
         Task UpdateBook(UpdateBookDto input);
-        Task UpdateBooks(UpdateBooksDto input);
         Task DeleteBook(DeleteBookDto input);
         Task<List<ListBookDto>> GetAllBooks();
         Task<BookDto> GetBook(int id);
