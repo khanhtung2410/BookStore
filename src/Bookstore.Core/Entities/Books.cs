@@ -1,5 +1,6 @@
 ﻿using Abp.Domain.Entities;
 using Abp.Domain.Entities.Auditing;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -54,22 +55,55 @@ namespace Bookstore.Entities
         [StringLength(BookConsts.MaxDescriptionLength)]
         public string Description { get; set; }
 
-        public DateTime? PublishedDate { get; set; }
-
-        public Book(string title, string author, BookConsts.Genre genre, string description, DateTime? publishedDate)
-        {
-            Title = title;
-            Author = author;
-            Genre = genre;
-            Description = description;
-            PublishedDate = publishedDate;
-        }
+        // Relationships
+        public virtual ICollection<BookInventory> Inventories { get; set; } = new List<BookInventory>();
+        public virtual ICollection<BookImage> Images { get; set; } = new List<BookImage>();
+        public virtual ICollection<BookEdition> Editions { get; set; } = new List<BookEdition>();
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
+            if (string.IsNullOrWhiteSpace(Title))
+            {
+                yield return new ValidationResult("Title is required.", new[] { nameof(Title) });
+            }
+            if (string.IsNullOrWhiteSpace(Author))
+            {
+                yield return new ValidationResult("Author is required.", new[] { nameof(Author) });
+            }
             if (!Enum.IsDefined(typeof(BookConsts.Genre), Genre))
             {
                 yield return new ValidationResult("Genre is required and must be a valid value.", new[] { nameof(Genre) });
+            }
+        }
+    }
+
+    [Table("BookEditions")]
+    public class BookEdition : FullAuditedEntity<int>, IValidatableObject
+    {
+        [ForeignKey(nameof(Book))]
+        public int BookId { get; set; }
+        public virtual Book Book { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string EditionName { get; set; }
+
+        [Required]
+        public DateTime? PublishedDate { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string ISBN { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (string.IsNullOrWhiteSpace(EditionName))
+            {
+                yield return new ValidationResult("Edition name is required.", new[] { nameof(EditionName) });
+            }
+            if (string.IsNullOrWhiteSpace(ISBN))
+            {
+                yield return new ValidationResult("ISBN is required.", new[] { nameof(ISBN) });
             }
             if (PublishedDate.HasValue && PublishedDate.Value > DateTime.Now.AddYears(1))
             {
@@ -83,6 +117,7 @@ namespace Bookstore.Entities
     {
         [ForeignKey(nameof(Book))]
         public int BookId { get; set; } 
+        public virtual Book Book { get; set; }
 
         [Required]
         public long Amount { get; set; }
@@ -94,16 +129,23 @@ namespace Bookstore.Entities
         [Required]
         [Column(TypeName = "decimal(18,2)")]
         public decimal SellPrice { get; set; }
+    }
 
-        public BookInventory(int bookId, long amount, decimal buyPrice, decimal sellPrice)
-        {
-            if (amount < 0) throw new ArgumentException("Amount cannot be negative", nameof(amount));
-            if (buyPrice < 0) throw new ArgumentException("Buy price cannot be negative", nameof(buyPrice));
-            if (sellPrice < 0) throw new ArgumentException("Sell price cannot be negative", nameof(sellPrice));
-            BookId = bookId;
-            Amount = amount;
-            BuyPrice = buyPrice;
-            SellPrice = sellPrice;
-        }
+    [Table("BookImages")]
+    public class BookImage : FullAuditedEntity<int>
+    {
+        [ForeignKey(nameof(Book))]
+        public int BookId { get; set; }
+        public virtual Book Book { get; set; }
+
+        [Required]
+        [StringLength(500)]
+        public string ImagePath { get; set; }
+
+        [StringLength(200)]
+        public string Caption { get; set; }
+
+        public int DisplayOrder { get; set; } = 0;
+        public bool IsCover { get; set; } = false;
     }
 }

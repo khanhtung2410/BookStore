@@ -1,0 +1,53 @@
+﻿@model Bookstore.Web.Models.Books.BookDetailViewModel
+@{
+    ViewData["Title"] = "Book Details";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4>@Model.Title</h4>
+        </div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Author</dt>
+                <dd class="col-sm-9">@Model.Author</dd>
+
+                <dt class="col-sm-3">Genre</dt>
+                <dd class="col-sm-9">@Model.Genre</dd>
+
+                <dt class="col-sm-3">Published Date</dt>
+                <dd class="col-sm-9">@Model.PublishedDate?.ToString("yyyy-MM-dd")</dd>
+
+                <dt class="col-sm-3">Description</dt>
+                <dd class="col-sm-9">@Model.Description</dd>
+            </dl>
+
+            @if (Model.Inventory != null)
+            {
+                <hr />
+                <h5>Inventory Information</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">Amount</dt>
+                    <dd class="col-sm-9">@Model.Inventory.Amount</dd>
+
+                    <dt class="col-sm-3">Buy Price</dt>
+                    <dd class="col-sm-9">@Model.Inventory.BuyPrice.ToString("C")</dd>
+
+                    <dt class="col-sm-3">Sell Price</dt>
+                    <dd class="col-sm-9">@Model.Inventory.SellPrice.ToString("C")</dd>
+                </dl>
+            }
+            else
+            {
+                <p class="text-muted mt-3"><em>No inventory data available.</em></p>
+            }
+        </div>
+
+        <div class="card-footer">
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+        </div>
+    </div>
+</div>

@@ -11,7 +11,8 @@ namespace Bookstore.EntityFrameworkCore
     {
         public DbSet<Book> Books { get; set; }
         public DbSet<BookInventory> BookInventories { get; set; }
-
+        public DbSet<BookImage> BookImages { get; set; }
+        public DbSet<BookEdition> BookEditions { get; set; }
         public BookstoreDbContext(DbContextOptions<BookstoreDbContext> options)
             : base(options)
         {

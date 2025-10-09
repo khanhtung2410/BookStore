@@ -1,4 +1,4 @@
-﻿    using Bookstore.Books;
+﻿using Bookstore.Books;
 using Bookstore.Books.Dto;
 using Bookstore.Controllers;
 using Bookstore.Entities;
@@ -42,14 +42,30 @@ namespace Bookstore.Web.Controllers
             return View(model);
         }
 
-        public async Task<ActionResult> Details(int id)
+        public async Task<ActionResult> Detail(int id)
         {
             var book = await _bookAppService.GetBook(id);
             if (book == null)
             {
                 return NotFound();
             }
-            return View(book);
+            var model = new BookDetailViewModel
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                Description = book.Description,
+                PublishedDate = book.PublishedDate,
+                Genre = book.Genre,
+                Inventory = book.Inventory != null ?
+                new BookInventoryViewModel
+                {
+                    Amount = book.Inventory.Amount,
+                    BuyPrice = book.Inventory.BuyPrice,
+                    SellPrice = book.Inventory.SellPrice
+                } : new BookInventoryViewModel()
+            };
+            return View(model);
         }
 
         public ActionResult Create()
