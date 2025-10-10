@@ -170,18 +170,18 @@ namespace Bookstore.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        //        [HttpPost]
-        //        [ValidateAntiForgeryToken]
-        //        public async Task<IActionResult> Delete(int id)
-        //        {
-        //            var book = await _bookAppService.GetBook(id);
-        //            if (book == null)
-        //            {
-        //                return NotFound();
-        //            }
-        //            await _bookAppService.DeleteBook(new DeleteBookDto { Id = id });
-        //            return Ok();
-        //        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var book = await _bookAppService.GetBook(id);
+            if (book == null)
+            {
+                return NotFound();
+            }
+            await _bookAppService.DeleteBook(new DeleteBookDto { Id = id });
+            return RedirectToAction(nameof(Index));
+        }
 
         //        public async Task<ActionResult> Update(int id)
         //        {

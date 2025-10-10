@@ -1,4 +1,4 @@
-﻿$(document).ready(function () {
+﻿$(function () {
     const container = $('#edition-container');
     const addButton = $('#addEditionBtn');
     let editionIndex = container.children('.edition-item').length || 0;
