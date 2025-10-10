@@ -15,12 +15,7 @@ namespace Bookstore.Web.Models.Books
         public IEnumerable<SelectListItem> GenreList { get; set; }
         public List<BookEditionViewModel> Editions { get; set; } = new List<BookEditionViewModel>();
     }
-    public class BookInventoryViewModel
-    {
-        public long StockQuantity { get; set; }
-        public decimal BuyPrice { get; set; }
-        public decimal SellPrice { get; set; }
-    }
+
     public class BookEditionViewModel
     {
         public int Id { get; set; }
@@ -31,6 +26,12 @@ namespace Bookstore.Web.Models.Books
         public string ISBN { get; set; }
         public BookInventoryViewModel Inventory { get; set; } = new BookInventoryViewModel();
         public DiscountViewModel? Discount { get; set; }
+    }
+    public class BookInventoryViewModel
+    {
+        public long StockQuantity { get; set; }
+        public decimal BuyPrice { get; set; }
+        public decimal SellPrice { get; set; }
     }
     public class DiscountViewModel
     {

@@ -89,70 +89,86 @@ namespace Bookstore.Web.Controllers
             return View(model);
         }
 
-        //public ActionResult Create()
-        //{
-        //    var model = new Models.Books.BookCreatePageViewModel();
-        //    model.Book = new Models.Books.BookCreateViewModel();
+        public ActionResult Create()
+        {
+            var model = new Models.Books.BookCreateViewModel();
 
-        //    model.Book.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
-        //    .Cast<BookConsts.Genre>()
-        //    .Select(g => new SelectListItem
-        //    {
-        //        Value = g.ToString(),
-        //        Text = g.ToString()
-        //    }).ToList();
+            model.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
+            .Cast<BookConsts.Genre>()
+            .Select(g => new SelectListItem
+            {
+                Value = g.ToString(),
+                Text = g.ToString()
+            }).ToList();
+           
+            model.Editions = new List<BookEditionCreateViewModel>
+            {
+                new BookEditionCreateViewModel
+                {
+                    FormatList = Enum.GetValues(typeof(BookConsts.Format)).Cast<BookConsts.Format>()
+                    .Select(f => new SelectListItem
+                    {
+                        Value = f.ToString(),
+                        Text = f.ToString()
+                    }).ToList()
+                }
+            };
 
-        //    return View(model);
-        //}
+            return View(model);
+        }
 
-        //        [HttpPost]
-        //        [ValidateAntiForgeryToken]
-        //        public async Task<IActionResult> Create(BookCreatePageViewModel model)
-        //        {
-        //            // Validate presence of nested objects
-        //            if (model?.Book == null || model.Book.Inventory == null)
-        //            {
-        //                ModelState.AddModelError(string.Empty, "Invalid book data. Please fill in all fields.");
-        //            }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(BookCreateViewModel model)
+        {
+            // Validate presence of nested objects
+            if (model == null || model.Editions == null)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid book data. Please add an Edition.");
+            }
 
-        //            if (!ModelState.IsValid)
-        //            {
-        //                // Ensure model and nested Book are not null so the view can render safely
-        //                model ??= new BookCreatePageViewModel();
-        //                model.Book ??= new BookCreateViewModel();
+            if (!ModelState.IsValid)
+            {
+                model ??= new BookCreateViewModel();
 
-        //                // Repopulate GenreList for the select element
-        //                model.Book.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
-        //                    .Cast<BookConsts.Genre>()
-        //                    .Select(g => new SelectListItem
-        //                    {
-        //                        Value = g.ToString(),
-        //                        Text = g.ToString()
-        //                    }).ToList();
+                // Repopulate GenreList for the select element
+                model.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
+                    .Cast<BookConsts.Genre>()
+                    .Select(g => new SelectListItem
+                    {
+                        Value = g.ToString(),
+                        Text = g.ToString()
+                    }).ToList();
 
-        //                return View(model);
-        //            }
+                return View(model);
+            }
 
-        //            var dto = new CreateBookDto
-        //            {
-        //                Title = model.Book.Title,
-        //                Author = model.Book.Author,
-        //                Genre = model.Book.Genre,
-        //                Description = model.Book.Description,
-        //                PublishedDate = model.Book.PublishedDate,
-        //                Inventory = new CreateBookInventoryDto
-        //                {
-        //                    Amount = model.Book.Inventory.Amount,
-        //                    BuyPrice = model.Book.Inventory.BuyPrice,
-        //                    SellPrice = model.Book.Inventory.SellPrice
-        //                }
-        //            };
+            var dto = new CreateBookDto
+            {
+                Title = model.Title,
+                Author = model.Author,
+                Genre = model.Genre,
+                Description = model.Description,
+                Editions = model.Editions.Select(e => new CreateBookEditionDto
+                {
+                    Format = e.Format,
+                    PublishedDate = e.PublishedDate,
+                    Publisher = e.Publisher,
+                    ISBN = e.ISBN,
+                    Inventory = new CreateBookInventoryDto
+                    {
+                        StockQuantity = e.Inventory.StockQuantity,
+                        BuyPrice = e.Inventory.BuyPrice,
+                        SellPrice = e.Inventory.SellPrice
+                    }
+                }).ToList()
+            };
 
-        //            await _bookAppService.CreateBook(dto);
+            await _bookAppService.CreateBook(dto);
 
-        //            // On success, redirect to the list page
-        //            return RedirectToAction(nameof(Index));
-        //        }
+            // On success, redirect to the list page
+            return RedirectToAction(nameof(Index));
+        }
 
         //        [HttpPost]
         //        [ValidateAntiForgeryToken]
