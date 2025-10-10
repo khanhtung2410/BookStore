@@ -12,7 +12,9 @@ namespace Bookstore.Books.Dto
     {
         public BookMapProfile()
         {
-
+            CreateMap<Book, ListBookDto>();
+            CreateMap<BookEdition, BookEditionDto>();
+            CreateMap<BookInventory, BookInventoryDto>();
         }
     }
 }

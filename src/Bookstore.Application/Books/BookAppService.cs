@@ -4,6 +4,8 @@ using Abp.Domain.Repositories;
 using Abp.UI;
 using Bookstore.Books.Dto;
 using Bookstore.Entities;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,38 +30,33 @@ namespace Bookstore.Books
         }
         public async Task<int> CreateBook(CreateBookDto input)
         {
+            if (input.Editions == null || !input.Editions.Any())
+                throw new UserFriendlyException("A book must have at least one edition.");
             var book = new Book(
                 input.Title,
                 input.Author,
                 input.Genre,
                 input.Description
             );
-
-            book.Editions = input.Editions?.Select(e => new BookEdition(
-                0,
-                e.Format,
-                e.Publisher,
-                e.PublishedDate ?? DateTime.Now,
-                e.ISBN
-            )).ToList() ?? new List<BookEdition>();
-
             var createdBookId = await _bookRepository.InsertAndGetIdAsync(book);
-            var createdBook = await _bookRepository.GetAsync(createdBookId);
-
-            var createdEditions = createdBook.Editions.ToList(); 
-
-            for (int i = 0; i < input.Editions.Count; i++)
+            foreach (var editionDto in input.Editions)
             {
-                var editionDto = input.Editions[i];
-                var editionEntity = createdEditions[i];
+                var edition = new BookEdition(
+                    createdBookId,
+                    editionDto.Format,
+                    editionDto.Publisher,
+                    editionDto.PublishedDate ?? DateTime.Now,
+                    editionDto.ISBN
+                );
+                var editionId = await _bookEditionRepository.InsertAndGetIdAsync(edition);
 
+                // 3️⃣ For each Edition, create its Inventory
                 var inventory = new BookInventory(
-                    editionEntity.Id,
+                    editionId,
                     editionDto.Inventory.BuyPrice,
                     editionDto.Inventory.SellPrice,
                     editionDto.Inventory.StockQuantity
                 );
-
                 await _bookInventoryRepository.InsertAsync(inventory);
             }
 
@@ -81,7 +78,9 @@ namespace Bookstore.Books
 
         public async Task<BookDto> GetBook(int id)
         {
-            var book = await _bookRepository.GetAsync(id);
+            var book = await _bookRepository
+    .GetAllIncluding(b => b.Editions)
+    .FirstOrDefaultAsync(b => b.Id == id);
 
             if (book == null)
                 throw new UserFriendlyException("Book not found.");
