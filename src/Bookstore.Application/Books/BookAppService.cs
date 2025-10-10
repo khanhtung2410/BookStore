@@ -104,7 +104,7 @@ namespace Bookstore.Books
                     Publisher = edition.Publisher,
                     PublishedDate = edition.PublishedDate,
                     ISBN = edition.ISBN,
-                    Pricing = inventory != null ? new BookInventoryDto
+                    Inventory = inventory != null ? new BookInventoryDto
                     {
                         Id = inventory.Id,
                         BookEditionId = inventory.BookEditionId,

@@ -39,7 +39,7 @@ namespace Bookstore.Books.Dto
         [Required]
         [StringLength(13, ErrorMessage = "ISBN can't be longer than 13 characters")]
         public string ISBN { get; set; }
-        public BookInventoryDto Pricing { get; set; }
+        public BookInventoryDto Inventory { get; set; }
         public DiscountDto? Discount { get; set; }
     }
  

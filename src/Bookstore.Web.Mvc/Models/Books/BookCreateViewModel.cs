@@ -23,10 +23,4 @@ namespace Bookstore.Web.Models.Books
         public BookInventoryViewModel Inventory { get; set; } = new BookInventoryViewModel();
     }
 
-    public class BookInventoryViewModel
-    {
-        public long Amount { get; set; }
-        public decimal BuyPrice { get; set; }
-        public decimal SellPrice { get; set; }
-    }
 }

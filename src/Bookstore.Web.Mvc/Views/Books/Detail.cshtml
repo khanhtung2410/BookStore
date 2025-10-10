@@ -5,49 +5,83 @@
 
 <div class="container mt-4">
     <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h4>@Model.Title</h4>
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 flex-grow-1">@Model.Title</h4>
+            <a asp-action="Index" class="btn btn-dark btn-sm ms-auto">
+                <i class="bi bi-arrow-left-circle me-1"></i> Back to List
+            </a>
         </div>
 
         <div class="card-body">
-            <dl class="row">
+            <dl class="row mb-4">
                 <dt class="col-sm-3">Author</dt>
                 <dd class="col-sm-9">@Model.Author</dd>
 
                 <dt class="col-sm-3">Genre</dt>
                 <dd class="col-sm-9">@Model.Genre</dd>
 
-                <dt class="col-sm-3">Published Date</dt>
-                <dd class="col-sm-9">@Model.PublishedDate?.ToString("yyyy-MM-dd")</dd>
-
                 <dt class="col-sm-3">Description</dt>
                 <dd class="col-sm-9">@Model.Description</dd>
             </dl>
 
-            @if (Model.Inventory != null)
+            @if (Model.Editions.Any())
             {
                 <hr />
-                <h5>Inventory Information</h5>
-                <dl class="row">
-                    <dt class="col-sm-3">Amount</dt>
-                    <dd class="col-sm-9">@Model.Inventory.Amount</dd>
+                <h5>Available Editions</h5>
 
-                    <dt class="col-sm-3">Buy Price</dt>
-                    <dd class="col-sm-9">@Model.Inventory.BuyPrice.ToString("C")</dd>
+                <div class="mb-3">
+                    <label for="editionSelect" class="form-label fw-bold">Format:</label>
+                    <select id="editionSelect" class="form-select w-auto">
+                        @foreach (var edition in Model.Editions)
+                        {
+                            <option value="@edition.Id">@edition.Format</option>
+                        }
+                    </select>
+                </div>
 
-                    <dt class="col-sm-3">Sell Price</dt>
-                    <dd class="col-sm-9">@Model.Inventory.SellPrice.ToString("C")</dd>
-                </dl>
+                <div id="editionDetails" class="card p-3 mb-3">
+                    <h6 class="fw-bold">Edition Details</h6>
+                    <dl class="row mb-3">
+                        <dt class="col-sm-3">Publisher</dt>
+                        <dd class="col-sm-9" id="publisherText"></dd>
+
+                        <dt class="col-sm-3">Published Date</dt>
+                        <dd class="col-sm-9" id="publishedText"></dd>
+
+                        <dt class="col-sm-3">ISBN</dt>
+                        <dd class="col-sm-9" id="isbnText"></dd>
+                    </dl>
+
+                    <h6 class="fw-bold mt-3">Inventory Information</h6>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Stock Quantity</dt>
+                        <dd class="col-sm-9" id="stockText"></dd>
+
+                        <dt class="col-sm-3">Buy Price (VNĐ)</dt>
+                        <dd class="col-sm-9" id="buyPriceText"></dd>
+
+                        <dt class="col-sm-3">Sell Price (VNĐ)</dt>
+                        <dd class="col-sm-9" id="sellPriceText"></dd>
+                    </dl>
+                </div>
             }
             else
             {
-                <p class="text-muted mt-3"><em>No inventory data available.</em></p>
+                <p class="text-muted mt-3"><em>No editions available for this book.</em></p>
             }
         </div>
 
-        <div class="card-footer">
-            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        <div class="card-footer text-end">
             <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
         </div>
     </div>
 </div>
+
+
+@section Scripts {
+    <script>
+        // Export editions to a global JS variable so the external JS can use it
+        window.bookEditions = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Editions));
+    </script>
+    <script src="~/view-resources/Views/Books/detailBook.js"></script>
+}

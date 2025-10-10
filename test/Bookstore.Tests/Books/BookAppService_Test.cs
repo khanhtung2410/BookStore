@@ -141,10 +141,10 @@ namespace Bookstore.Tests.Books
             Assert.NotNull(createdBook.Editions);
             Assert.Single(createdBook.Editions);
             var edition = createdBook.Editions.First();
-            Assert.NotNull(edition.Pricing);
-            Assert.Equal(10, edition.Pricing.StockQuantity);
-            Assert.Equal(5.99m, edition.Pricing.BuyPrice);
-            Assert.Equal(9.99m, edition.Pricing.SellPrice);
+            Assert.NotNull(edition.Inventory);
+            Assert.Equal(10, edition.Inventory.StockQuantity);
+            Assert.Equal(5.99m, edition.Inventory.BuyPrice);
+            Assert.Equal(9.99m, edition.Inventory.SellPrice);
         }
 
         [Fact]
@@ -227,10 +227,10 @@ namespace Bookstore.Tests.Books
             Assert.Equal(BookConsts.Format.Paperback, edition.Format);
             Assert.Equal("Updated Publisher", edition.Publisher);
             Assert.Equal("9876543210987", edition.ISBN);
-            Assert.NotNull(edition.Pricing);
-            Assert.Equal(3, edition.Pricing.StockQuantity);
-            Assert.Equal(20.0m, edition.Pricing.BuyPrice);
-            Assert.Equal(25.0m, edition.Pricing.SellPrice);
+            Assert.NotNull(edition.Inventory);
+            Assert.Equal(3, edition.Inventory.StockQuantity);
+            Assert.Equal(20.0m, edition.Inventory.BuyPrice);
+            Assert.Equal(25.0m, edition.Inventory.SellPrice);
         }
 
         [Theory]
