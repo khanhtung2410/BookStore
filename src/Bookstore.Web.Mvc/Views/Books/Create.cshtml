@@ -44,48 +44,6 @@
 
                 <h5 class="text-secondary mb-3">📚 Editions</h5>
                 <div id="edition-container">
-                    @for (int i = 0; i < Model.Editions.Count(); i++)
-                    {
-                        <div class="edition-item border rounded p-3 mb-3 bg-light">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label asp-for="Editions[@i].Format" class="form-label fw-semibold">Format</label>
-                                    <select asp-for="Editions[@i].Format"
-                                            class="form-select"
-                                            asp-items="Model.Editions[@i].FormatList">
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label asp-for="Editions[@i].PublishedDate" class="form-label fw-semibold">Published Date</label>
-                                    <input asp-for="Editions[i].PublishedDate" type="date" class="form-control" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label asp-for="Editions[@i].Publisher" class="form-label fw-semibold">Publisher</label>
-                                    <input asp-for="Editions[i].Publisher" class="form-control" />
-                                </div>
-                                <div class="col-md-4">
-                                    <label asp-for="Editions[@i].ISBN" class="form-label fw-semibold">ISBN</label>
-                                    <input asp-for="Editions[i].ISBN" class="form-control" />
-                                </div>
-                            </div>
-
-                            <h6 class="mt-4 text-muted">Inventory</h6>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label asp-for="Editions[@i].Inventory.StockQuantity" class="form-label fw-semibold">Stock</label>
-                                    <input asp-for="Editions[i].Inventory.StockQuantity" class="form-control" />
-                                </div>
-                                <div class="col-md-4">
-                                    <label asp-for="Editions[@i].Inventory.BuyPrice" class="form-label fw-semibold">Buy Price</label>
-                                    <input asp-for="Editions[i].Inventory.BuyPrice" class="form-control" />
-                                </div>
-                                <div class="col-md-4">
-                                    <label asp-for="Editions[@i].Inventory.SellPrice" class="form-label fw-semibold">Sell Price</label>
-                                    <input asp-for="Editions[i].Inventory.SellPrice" class="form-control" />
-                                </div>
-                            </div>
-                        </div>
-                    }
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-3">
@@ -103,4 +61,8 @@
 
 @section Scripts {
     <script src="~/view-resources/Views/Books/createBook.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.12/dist/jquery.validate.unobtrusive.min.js"></script>
+
 }
