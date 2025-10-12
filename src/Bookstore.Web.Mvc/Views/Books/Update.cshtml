@@ -1,67 +1,132 @@
 ﻿@model Bookstore.Web.Models.Books.BookUpdateViewModel
 
-
 @{
     ViewBag.Title = "Update Book";
 }
 
-
-<div class="container mt-5">
-    <form id="updateBookForm" method="post">
-        @Html.AntiForgeryToken()
-        <div class="form-group">
-            <label asp-for="Title"></label>
-            <input asp-for="Title" class="form-control" required />
+<div class="container mt-5 mb-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex align-items-center px-3">
+            <h4 class="mb-0 flex-grow-1">@ViewBag.Title</h4>
+            <a asp-action="Index" class="btn btn-dark btn-sm">
+                <i class="bi bi-arrow-left-circle me-1"></i> Back to List
+            </a>
         </div>
 
-        <div class="form-group">
-            <label asp-for="Author"></label>
-            <input asp-for="Author" class="form-control" required />
+        <div class="card-body">
+            <form id="updateBookForm" asp-action="Update" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Title" class="form-label fw-semibold"></label>
+                        <input asp-for="Title" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Author" class="form-label fw-semibold"></label>
+                        <input asp-for="Author" class="form-control" required />
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Genre" class="form-label fw-semibold"></label>
+                        <select asp-for="Genre" class="form-select" asp-items="Model.GenreList">
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Description" class="form-label fw-semibold"></label>
+                        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <hr />
+
+                <h5 class="text-secondary mb-3">📚 Editions</h5>
+                <div id="edition-container">
+                    @if (Model.Editions != null && Model.Editions.Any())
+                    {
+                        for (int i = 0; i < Model.Editions.Count; i++)
+                        {
+                            <div class="edition-item border rounded p-3 mb-3 bg-light">
+                                <h6 class="fw-semibold">Edition #@(i + 1)</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Format</label>
+                                        <select name="Editions[@i].Format" class="form-select" required>
+                                            @if (Model.Editions[i].Format.ToString() == "Hardcover")
+                                            {
+                                                <option value="Hardcover" selected>Hardcover</option>
+                                                <option value="Paperback">Paperback</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="Hardcover">Hardcover</option>
+                                                <option value="Paperback" selected>Paperback</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Published Date</label>
+                                        <input type="date" name="Editions[@i].PublishedDate" class="form-control"
+                                               value="@Model.Editions[i].PublishedDate.ToString("yyyy-MM-dd")" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Publisher</label>
+                                        <input type="text" name="Editions[@i].Publisher" class="form-control"
+                                               value="@Model.Editions[i].Publisher" required />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">ISBN</label>
+                                        <input type="text" name="Editions[@i].ISBN" class="form-control"
+                                               value="@Model.Editions[i].ISBN" required />
+                                    </div>
+                                </div>
+
+                                <h6 class="mt-4 text-muted">Inventory</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Stock</label>
+                                        <input type="number" name="Editions[@i].Inventory.StockQuantity" class="form-control"
+                                               value="@Model.Editions[i].Inventory.StockQuantity" min="0" required />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Buy Price</label>
+                                        <input type="number" step="0.01" name="Editions[@i].Inventory.BuyPrice" class="form-control"
+                                               value="@Model.Editions[i].Inventory.BuyPrice" min="0" required />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Sell Price</label>
+                                        <input type="number" step="0.01" name="Editions[@i].Inventory.SellPrice" class="form-control"
+                                               value="@Model.Editions[i].Inventory.SellPrice" min="0" required />
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-danger btn-sm mt-3 remove-edition-btn">
+                                    <i class="bi bi-trash"></i> Remove
+                                </button>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button type="button" class="btn btn-outline-secondary" id="addEditionBtn">
+                        <i class="bi bi-plus-circle me-1"></i> Add Another Edition
+                    </button>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-save me-1"></i> Save Book
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <div class="form-group">
-            <label asp-for="Genre"></label>
-            <select asp-for="Genre" class="form-control" asp-items="Model.GenreList">
-                <option value="">-- Select Genre --</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="Description"></label>
-            <textarea asp-for="Description" class="form-control"></textarea>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="PublishedDate"></label>
-            <input asp-for="PublishedDate" class="form-control" type="date" required />
-        </div>
-        <div class="form-group">
-            <label asp-for="Inventory.StockQuantity"></label>
-            <input asp-for="Inventory.StockQuantity" type="number" class="form-control" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-            <label asp-for="Inventory.BuyPrice"></label>
-            <div class="input-group">
-                <input asp-for="Inventory.BuyPrice" type="number" class="form-control" min="0" step="0.01" />
-                <span class="input-group-text">₫</span>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="Inventory.SellPrice"></label>
-            <div class="input-group">
-                <input asp-for="Inventory.SellPrice" type="number" class="form-control" min="0" step="0.01" />
-                <span class="input-group-text">₫</span>
-            </div>
-        </div>
-
-
-        <button type="submit" class="btn btn-primary">Save</button>
-    </form>
-
+    </div>
 </div>
 
-@section scripts
-{
+@section Scripts {
+    <script src="~/view-resources/Views/Books/updateBook.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.12/dist/jquery.validate.unobtrusive.min.js"></script>
 }

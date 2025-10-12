@@ -26,10 +26,11 @@ namespace Bookstore.Entities
         [Required]
         public DateTime PublishedDate { get; set; }
 
+        [Required]
         [StringLength(13)]
         public string ISBN { get; set; }
 
-        public virtual BookInventory BookInventory { get; set; }
+        public virtual BookInventory Inventory { get; set; }
 
         public BookEdition() { }
 

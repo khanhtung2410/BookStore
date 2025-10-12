@@ -78,9 +78,7 @@ namespace Bookstore.Books
 
         public async Task<BookDto> GetBook(int id)
         {
-            var book = await _bookRepository
-    .GetAllIncluding(b => b.Editions)
-    .FirstOrDefaultAsync(b => b.Id == id);
+            var book = await _bookRepository.GetAllIncluding(b => b.Editions).FirstOrDefaultAsync(b => b.Id == id);
 
             if (book == null)
                 throw new UserFriendlyException("Book not found.");
@@ -117,47 +115,82 @@ namespace Bookstore.Books
             }
             return bookDto;
         }
-
         public async Task UpdateBook(UpdateBookDto input)
         {
-            var book = await _bookRepository.GetAsync(input.Id);
+            var book = await _bookRepository
+                .GetAllIncluding(b => b.Editions)
+                .FirstOrDefaultAsync(b => b.Id == input.Id);
+
             if (book == null)
-            {
                 throw new UserFriendlyException("Book not found");
-            }
+
+            // Update main fields
             book.Title = input.Title;
             book.Author = input.Author;
             book.Description = input.Description;
             book.Genre = input.Genre;
 
-            var existingEditionIds = book.Editions.Select(e => e.Id).ToList();
-            var incomingEditionIds = input.Editions?.Select(e => e.Id).ToList() ?? new List<int>();
+            var incomingEditionIds = input.Editions?.Where(e => e.Id > 0).Select(e => e.Id).ToList() ?? new List<int>();
 
+            // Delete removed editions
             var deletedEditions = book.Editions
-        .Where(e => !incomingEditionIds.Contains(e.Id))
-        .ToList();
+                .Where(e => !incomingEditionIds.Contains(e.Id))
+                .ToList();
+
             foreach (var del in deletedEditions)
             {
                 await _bookEditionRepository.DeleteAsync(del);
+                book.Editions.Remove(del);
             }
 
-            //Update or add editions
+            // Add/update editions and inventories
             foreach (var editionInput in input.Editions)
             {
-                var existingEdition = await _bookEditionRepository.FirstOrDefaultAsync(be => be.Id == editionInput.Id);
+                BookEdition edition;
 
-                if (existingEdition != null)
+                if (editionInput.Id > 0)
                 {
-                    existingEdition.Format = editionInput.Format;
-                    existingEdition.Publisher = editionInput.Publisher;
-                    existingEdition.PublishedDate = editionInput.PublishedDate ?? DateTime.Now;
-                    existingEdition.ISBN = editionInput.ISBN;
+                    // Existing edition
+                    edition = await _bookEditionRepository
+                        .GetAllIncluding(e => e.Inventory)
+                        .FirstOrDefaultAsync(e => e.Id == editionInput.Id);
 
-                    await _bookEditionRepository.UpdateAsync(existingEdition);
+                    if (edition == null)
+                        continue;
+
+                    edition.Format = editionInput.Format;
+                    edition.Publisher = editionInput.Publisher;
+                    edition.PublishedDate = editionInput.PublishedDate ?? DateTime.Now;
+                    edition.ISBN = editionInput.ISBN;
+
+                    // Inventory update
+                    if (editionInput.Inventory != null)
+                    {
+                        if (edition.Inventory != null)
+                        {
+                            edition.Inventory.StockQuantity = editionInput.Inventory.StockQuantity;
+                            edition.Inventory.BuyPrice = editionInput.Inventory.BuyPrice;
+                            edition.Inventory.SellPrice = editionInput.Inventory.SellPrice;
+                            await _bookInventoryRepository.UpdateAsync(edition.Inventory);
+                        }
+                        else
+                        {
+                            var newInventory = new BookInventory(
+                                edition.Id,
+                                editionInput.Inventory.BuyPrice,
+                                editionInput.Inventory.SellPrice,
+                                editionInput.Inventory.StockQuantity
+                            );
+                            await _bookInventoryRepository.InsertAsync(newInventory);
+                        }
+                    }
+
+                    await _bookEditionRepository.UpdateAsync(edition);
                 }
                 else
                 {
-                    var newEdition = new BookEdition(
+                    // New edition
+                    edition = new BookEdition(
                         book.Id,
                         editionInput.Format,
                         editionInput.Publisher,
@@ -165,39 +198,29 @@ namespace Bookstore.Books
                         editionInput.ISBN
                     );
 
-                    await _bookEditionRepository.InsertAsync(newEdition);
-                }
-            }
-            //Update or add inventories
-            foreach (var editionInput in input.Editions)
-            {
-                if (editionInput.Inventory == null) continue;
+                    await _bookEditionRepository.InsertAsync(edition);
+                    await CurrentUnitOfWork.SaveChangesAsync(); // Ensure edition.Id is generated
 
-                var inventory = await _bookInventoryRepository
-                    .FirstOrDefaultAsync(bi => bi.BookEditionId == editionInput.Id);
+                    if (editionInput.Inventory != null)
+                    {
+                        var newInventory = new BookInventory(
+                            edition.Id,
+                            editionInput.Inventory.BuyPrice,
+                            editionInput.Inventory.SellPrice,
+                            editionInput.Inventory.StockQuantity
+                        );
 
-                if (inventory != null)
-                {
-                    inventory.StockQuantity = editionInput.Inventory.StockQuantity;
-                    inventory.BuyPrice = editionInput.Inventory.BuyPrice;
-                    inventory.SellPrice = editionInput.Inventory.SellPrice;
-                    await _bookInventoryRepository.UpdateAsync(inventory);
-                }
-                else
-                {
-                    var newInventory = new BookInventory(
-                        editionInput.Id,
-                        editionInput.Inventory.BuyPrice,
-                        editionInput.Inventory.SellPrice,
-                                                editionInput.Inventory.StockQuantity
+                        await _bookInventoryRepository.InsertAsync(newInventory);
+                    }
 
-                    );
-                    await _bookInventoryRepository.InsertAsync(newInventory);
+                    book.Editions.Add(edition);
                 }
             }
 
             await _bookRepository.UpdateAsync(book);
+            await CurrentUnitOfWork.SaveChangesAsync();
         }
+
 
     }
 }

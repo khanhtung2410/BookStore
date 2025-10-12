@@ -12,8 +12,7 @@ namespace Bookstore.Web.Models.Books
         public string Author { get; set; }
         public BookConsts.Genre Genre { get; set; }
         public string Description { get; set; }
-        public DateTime? PublishedDate { get; set; }
         public IEnumerable<SelectListItem> GenreList { get; set; }
-        public BookInventoryViewModel Inventory { get; set; } = new BookInventoryViewModel();
+        public List<BookEditionViewModel> Editions { get; set; } = new();
     }
 }

@@ -26,7 +26,7 @@ namespace Bookstore.Books.Dto
         public string ISBN { get; set; }
 
         [Required]
-        public CreateBookInventoryDto Inventory { get; set; } // Moved here
+        public CreateBookInventoryDto Inventory { get; set; } 
     }
 
     [AutoMapTo(typeof(Book))]

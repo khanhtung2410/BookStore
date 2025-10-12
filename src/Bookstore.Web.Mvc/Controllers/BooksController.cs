@@ -183,84 +183,105 @@ namespace Bookstore.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        //        public async Task<ActionResult> Update(int id)
-        //        {
-        //            var book = await _bookAppService.GetBook(id);
-        //            if (book == null)
-        //            {
-        //                return NotFound();
-        //            }
+        public async Task<ActionResult> Update(int id)
+        {
+            var book = await _bookAppService.GetBook(id);
+            if (book == null)
+            {
+                return NotFound();
+            }
 
 
-        //            var model = new BookUpdateViewModel
-        //            {
-        //                Id = book.Id,
-        //                Title = book.Title,
-        //                Author = book.Author,
-        //                Description = book.Description,
-        //                Genre = book.Genre,
-        //                Inventory = book.Inventory != null ?
-        //                new BookInventoryViewModel
-        //                {
-        //                    Amount = book.Inventory.Amount,
-        //                    BuyPrice = book.Inventory.BuyPrice,
-        //                    SellPrice = book.Inventory.SellPrice
-        //                } : new BookInventoryViewModel()
-        //            };
+            var model = new BookUpdateViewModel
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                Description = book.Description,
+                Genre = book.Genre,
+                Editions = book.Editions != null
+                     ? book.Editions.Select(e => new BookEditionViewModel
+                     {
+                         Id = e.Id,
+                         BookId = e.BookId,
+                         Format = e.Format,
+                         Publisher = e.Publisher,
+                         PublishedDate = e.PublishedDate,
+                         ISBN = e.ISBN,
+                         Inventory = e.Inventory != null ? new BookInventoryViewModel
+                         {
+                             StockQuantity = e.Inventory.StockQuantity,
+                             BuyPrice = e.Inventory.BuyPrice,
+                             SellPrice = e.Inventory.SellPrice
+                         } : null,
+                         Discount = e.Discount != null ? new DiscountViewModel
+                         {
+                            
+                         } : null
+                     }).ToList()
+                     : new List<BookEditionViewModel>(),
+                GenreList = Enum.GetValues(typeof(BookConsts.Genre))
+                     .Cast<BookConsts.Genre>()
+                     .Select(g => new SelectListItem
+                     {
+                         Value = g.ToString(),
+                         Text = g.ToString(),
+                         Selected = g.ToString() == book.Genre.ToString()
+                     }).ToList()
+            };
 
-        //            model.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
-        //                .Cast<BookConsts.Genre>()
-        //                .Select(g => new SelectListItem
-        //                {
-        //                    Value = g.ToString(),
-        //                    Text = g.ToString(),
-        //                    Selected = g.ToString() == model.Genre.ToString()
-        //                }).ToList();
+            return View(model);
+        }
 
-        //            return View(model);
-        //        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Update(int id, BookUpdateViewModel model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
 
-        //        [HttpPost]
-        //        [ValidateAntiForgeryToken]
-        //        public async Task<IActionResult> Update(int id, BookUpdateViewModel model)
-        //        {
-        //            if (id != model.Id)
-        //            {
-        //                return NotFound();
-        //            }
+            if (!ModelState.IsValid)
+            {
+                model.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
+               .Cast<BookConsts.Genre>()
+               .Select(g => new SelectListItem
+               {
+                   Value = g.ToString(),
+                   Text = g.ToString(),
+                   Selected = g.ToString() == model.Genre.ToString()
+               }).ToList();
+                return View(model);
+            }
 
-        //            if (!ModelState.IsValid)
-        //            {
-        //                model.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
-        //               .Cast<BookConsts.Genre>()
-        //               .Select(g => new SelectListItem
-        //               {
-        //                   Value = g.ToString(),
-        //                   Text = g.ToString(),
-        //                   Selected = g.ToString() == model.Genre.ToString()
-        //               }).ToList();
-        //                return View(model);
-        //            }
+            var dto = new UpdateBookDto
+            {
+                Id = model.Id,
+                Title = model.Title,
+                Author = model.Author,
+                Description = model.Description,
+                Genre = model.Genre,
+                Editions = model.Editions.Select(e => new UpdateBookEditionDto
+                {
+                    Id = e.Id,               
+                    BookId = e.BookId,
+                    Format = e.Format,
+                    PublishedDate = e.PublishedDate,
+                    Publisher = e.Publisher,
+                    ISBN = e.ISBN,
+                    Inventory = new CreateBookInventoryDto
+                    {
+                        StockQuantity = e.Inventory.StockQuantity,
+                        BuyPrice = e.Inventory.BuyPrice,
+                        SellPrice = e.Inventory.SellPrice
+                    }
+                }).ToList()
+            };
 
-        //            var dto = new UpdateBookDto
-        //            {
-        //                Id = model.Id,
-        //                Title = model.Title,
-        //                Author = model.Author,
-        //                Description = model.Description,
-        //                PublishedDate = model.PublishedDate,
-        //                Genre = model.Genre,
-        //                Inventory = new UpdateBookInventoryDto
-        //                {
-        //                    Amount = model.Inventory.Amount,
-        //                    BuyPrice = model.Inventory.BuyPrice,
-        //                    SellPrice = model.Inventory.SellPrice
-        //                }
-        //            };
+            await _bookAppService.UpdateBook(dto);
+            return RedirectToAction(nameof(Index));
 
-        //            await _bookAppService.UpdateBook(dto);
-        //            return RedirectToAction(nameof(Index));
-
-        //        }
+        }
     }
 }

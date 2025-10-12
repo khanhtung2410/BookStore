@@ -233,6 +233,141 @@ namespace Bookstore.Tests.Books
             Assert.Equal(25.0m, edition.Inventory.SellPrice);
         }
 
+        [Fact]
+        public async Task UpdateBook_Add_And_Remove_Editions_Test()
+        {
+            // Clean DB
+            await UsingDbContextAsync(async context =>
+            {
+                context.Books.RemoveRange(context.Books);
+                context.BookEditions.RemoveRange(context.BookEditions);
+                context.BookInventories.RemoveRange(context.BookInventories);
+                await context.SaveChangesAsync();
+            });
+
+            // Create a book with 2 editions
+            var createInput = new CreateBookDto
+            {
+                Title = "Book A",
+                Author = "Author A",
+                Genre = BookConsts.Genre.Fiction,
+                Description = "Initial Description",
+                Editions = new List<CreateBookEditionDto>
+        {
+            new CreateBookEditionDto
+            {
+                Format = BookConsts.Format.Hardcover,
+                Publisher = "Publisher 1",
+                PublishedDate = DateTime.Now,
+                ISBN = "1111111111111",
+                Inventory = new CreateBookInventoryDto
+                {
+                    BuyPrice = 10.0m,
+                    SellPrice = 15.0m,
+                    StockQuantity = 5
+                }
+            },
+            new CreateBookEditionDto
+            {
+                Format = BookConsts.Format.Paperback,
+                Publisher = "Publisher 2",
+                PublishedDate = DateTime.Now,
+                ISBN = "2222222222222",
+                Inventory = new CreateBookInventoryDto
+                {
+                    BuyPrice = 12.0m,
+                    SellPrice = 18.0m,
+                    StockQuantity = 7
+                }
+            }
+        }
+            };
+
+            var bookId = await _bookAppService.CreateBook(createInput);
+            var createdBook = await _bookAppService.GetBook(bookId);
+            Assert.Equal(2, createdBook.Editions.Count);
+
+            // Prepare update:
+            //  - Update first edition
+            //  - Remove second edition
+            //  - Add a new edition
+            var editionToUpdate = createdBook.Editions.First();
+            var editionToRemove = createdBook.Editions.Last();
+
+            var updatedEdition = new UpdateBookEditionDto
+            {
+                Id = editionToUpdate.Id,
+                BookId = bookId,
+                Format = BookConsts.Format.Hardcover,
+                Publisher = "Updated Publisher 1",
+                PublishedDate = DateTime.Now.AddDays(1),
+                ISBN = "9999999999999",
+                Inventory = new CreateBookInventoryDto
+                {
+                    BuyPrice = 20.0m,
+                    SellPrice = 25.0m,
+                    StockQuantity = 3
+                }
+            };
+
+            var newEdition = new UpdateBookEditionDto
+            {
+                // No Id => treated as new
+                BookId = bookId,
+                Format = BookConsts.Format.Paperback,
+                Publisher = "New Publisher",
+                PublishedDate = DateTime.Now.AddDays(2),
+                ISBN = "3333333333333",
+                Inventory = new CreateBookInventoryDto
+                {
+                    BuyPrice = 5.0m,
+                    SellPrice = 8.0m,
+                    StockQuantity = 10
+                }
+            };
+
+            var updateInput = new UpdateBookDto
+            {
+                Id = bookId,
+                Title = "Updated Book A",
+                Author = "Updated Author A",
+                Genre = BookConsts.Genre.NonFiction,
+                Description = "Updated Description",
+                Editions = new List<UpdateBookEditionDto>
+        {
+            updatedEdition,
+            newEdition // new one added
+        }
+               
+            };
+
+            // Act
+            await _bookAppService.UpdateBook(updateInput);
+
+            // Assert
+            var updatedBook = await _bookAppService.GetBook(bookId);
+            Assert.Equal("Updated Book A", updatedBook.Title);
+            Assert.Equal(2, updatedBook.Editions.Count); // 1 updated + 1 new
+
+            var updated = updatedBook.Editions.FirstOrDefault(e => e.ISBN == "9999999999999");
+            var added = updatedBook.Editions.FirstOrDefault(e => e.ISBN == "3333333333333");
+
+            Assert.NotNull(updated);
+            Assert.NotNull(added);
+            Assert.DoesNotContain(updatedBook.Editions, e => e.ISBN == "2222222222222"); // removed one
+
+            // Updated edition check
+            Assert.Equal("Updated Publisher 1", updated.Publisher);
+            Assert.Equal(3, updated.Inventory.StockQuantity);
+            Assert.Equal(25.0m, updated.Inventory.SellPrice);
+
+            // New edition check
+            Assert.Equal(BookConsts.Format.Paperback, added.Format);
+            Assert.Equal("New Publisher", added.Publisher);
+            Assert.Equal(10, added.Inventory.StockQuantity);
+        }
+
+
         [Theory]
         [InlineData(null, "Author", BookConsts.Genre.Fiction, "Description")] // Title null
         [InlineData("Title", null, BookConsts.Genre.Fiction, "Description")] // Author null

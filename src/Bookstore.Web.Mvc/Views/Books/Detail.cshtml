@@ -83,5 +83,5 @@
         // Export editions to a global JS variable so the external JS can use it
         window.bookEditions = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Editions));
     </script>
-    <script src="~/view-resources/Views/Books/detailBook.js"></script>
+    <script src="~/view-resources/Views/Books/detailBook.js?v=@DateTime.Now.Ticks"></script>
 }
