@@ -63,6 +63,7 @@
     // Remove edition
     container.on('click', '.remove-edition-btn', function () {
         $(this).closest('.edition-item').remove();
+        editionIndex--;
     });
 
     // Form validation & AJAX submission
