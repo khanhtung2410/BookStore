@@ -41,7 +41,7 @@
                     console.log("success");
                     setTimeout(function () {
                         window.location.href = '/Books';
-                    }, 1000);   
+                    }, 1000);
                 },
                 error: function (xhr) {
                     abp.notify.error("Error importing books");
@@ -50,15 +50,6 @@
             });
             return false;
         }
-    });
-
-    document.getElementById('ExcelFile').addEventListener('change', function (event) {
-        const file = event.target.files[0]; // get the first selected file
-        if (!file) return;
-
-        console.log("Selected file name:", file.name);
-        console.log("MIME type:", file.type); // browser-reported MIME type
-        console.log("File size (bytes):", file.size);
     });
 
 });
