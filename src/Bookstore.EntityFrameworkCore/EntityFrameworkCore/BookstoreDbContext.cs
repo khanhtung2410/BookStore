@@ -21,6 +21,15 @@ namespace Bookstore.EntityFrameworkCore
             : base(options)
         {
         }
-       
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<BookEdition>(entity =>
+            {
+                entity.HasIndex(e => e.ISBN).IsUnique();
+            });
+        }
+
     }
 }

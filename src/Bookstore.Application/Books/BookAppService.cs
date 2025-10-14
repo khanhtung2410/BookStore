@@ -28,6 +28,7 @@ namespace Bookstore.Books
             _bookInventoryRepository = bookInventoryRepository;
             _bookEditionRepository = bookEditionRepository;
         }
+        [Abp.Authorization.AbpAuthorize("Pages.Books.Create")]
         public async Task<int> CreateBook(CreateBookDto input)
         {
             if (input.Editions == null || !input.Editions.Any())
@@ -62,9 +63,7 @@ namespace Bookstore.Books
 
             return createdBookId;
         }
-
-
-
+        [Abp.Authorization.AbpAuthorize("Pages.Books.Delete")]
         public async Task DeleteBook(DeleteBookDto input)
         {
             await _bookRepository.DeleteAsync(input.Id);
@@ -115,6 +114,7 @@ namespace Bookstore.Books
             }
             return bookDto;
         }
+        [Abp.Authorization.AbpAuthorize("Pages.Books.Update")]
         public async Task UpdateBook(UpdateBookDto input)
         {
             var book = await _bookRepository

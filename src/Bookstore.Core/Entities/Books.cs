@@ -18,6 +18,7 @@ namespace Bookstore.Entities
         public const int MaxTitleLength = 200;
         public const int MaxAuthorLength = 50;
         public const int MaxDescriptionLength = 5000;
+        public const int MinISBNLength = 13;
         public enum Genre
         {
             Fiction,

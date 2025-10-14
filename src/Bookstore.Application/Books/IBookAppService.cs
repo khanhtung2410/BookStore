@@ -18,5 +18,11 @@ namespace Bookstore.Books
         Task<List<ListBookDto>> GetAllBooks();
         Task<BookDto> GetBook(int id);
     }
+    public interface IBookImportAppService : IApplicationService
+    {
+        Task ImportBooksFromExcel(byte[] fileBytes);
+        Task ImportBookHandle(UpdateBookDto input);
+
+    }
 
 }

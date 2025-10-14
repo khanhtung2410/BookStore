@@ -7,7 +7,7 @@
     const stockText = document.getElementById("stockText");
     const buyPriceText = document.getElementById("buyPriceText");
     const sellPriceText = document.getElementById("sellPriceText");
-    console.log("aaaaaa");
+ 
     function showEdition(id) {
         const edition = editions.find(e => e.Id === parseInt(id));
         if (!edition) return;
