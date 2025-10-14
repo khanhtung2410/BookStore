@@ -8,5 +8,10 @@
         public const string Pages_Users_Activation = "Pages.Users.Activation";
 
         public const string Pages_Roles = "Pages.Roles";
+        public const string Pages_Books = "Pages.Books";
+        public const string Pages_Books_Create = "Pages.Books.Create";
+        public const string Pages_Books_Update = "Pages.Books.Update";
+        public const string Pages_Books_Delete = "Pages.Books.Delete";
+        public const string Pages_Books_View = "Pages.Books.View";
     }
 }

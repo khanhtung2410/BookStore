@@ -1,38 +1,47 @@
-﻿using Bookstore.Controllers;
+﻿using Bookstore.Books;
+using Bookstore.Books.Dto;
+using Bookstore.Controllers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
+using OfficeOpenXml.DataValidation;
+using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Bookstore.Web.Controllers
 {
     public class ImportController : BookstoreControllerBase
     {
+        private readonly IBookImportAppService _bookImportService;
         [HttpGet("template")]
         public FileResult DownloadImportTemplate()
         {
             ExcelPackage.License.SetNonCommercialPersonal("Jhon");
             byte[] fileBytes;
 
-            using (var package = new ExcelPackage(new FileInfo("BookImport")))
+            using (var package = new ExcelPackage())
             {
                 var sheet = package.Workbook.Worksheets.Add("Books");
-                var tblRange = sheet.Cells["A1:L100"];
-                var table = sheet.Tables.Add(tblRange, "BookTable");
 
                 //Headers
-                sheet.Cells["A1"].Value = "Title";
-                sheet.Cells["B1"].Value = "Author";
-                sheet.Cells["C1"].Value = "Genre";
-                sheet.Cells["D1"].Value = "Description";
-                sheet.Cells["E1"].Value = "Format";
-                sheet.Cells["F1"].Value = "Publisher";
-                sheet.Cells["G1"].Value = "PublishedDate (dd-MM-yyyy)";
-                sheet.Cells["H1"].Value = "ISBN";
-                sheet.Cells["I1"].Value = "BuyPrice (VND)";
-                sheet.Cells["J1"].Value = "SellPrice";
-                sheet.Cells["K1"].Value = "StockQuantity";
-                sheet.Cells["L1"].Value = "Expenditure (VND)";
+                string[] headers = {
+                "Title", "Author", "Genre", "Description", "Format",
+                "Publisher", "PublishedDate (dd-MM-yyyy)", "ISBN",
+                "BuyPrice (VND)", "SellPrice", "StockQuantity", "Expenditure (VND)"
+                };
+
+                for (int col = 1; col <= headers.Length; col++)
+                {
+                    sheet.Cells[1, col].Value = headers[col - 1];
+                    sheet.Cells[1, col].Style.Font.Bold = true;
+                }
+
+                //Table
+                var tblRange = sheet.Cells[1, 1, 2, headers.Length]; // Initial 2 rows
+                var table = sheet.Tables.Add(tblRange, "BookTable");
+                table.ShowHeader = true;
 
                 //Format columns
                 sheet.Column(1).Style.Numberformat.Format = "@"; // Title
@@ -50,7 +59,7 @@ namespace Bookstore.Web.Controllers
 
                 //Enum validaaation
                 //Book Format
-                var formatValidation = sheet.DataValidations.AddListValidation("E2:E100");
+                var formatValidation = sheet.DataValidations.AddListValidation("E2:E10");
                 formatValidation.ShowErrorMessage = true;
                 formatValidation.ErrorStyle = OfficeOpenXml.DataValidation.ExcelDataValidationWarningStyle.stop;
                 formatValidation.ErrorTitle = "Invalid Format";
@@ -60,31 +69,24 @@ namespace Bookstore.Web.Controllers
                 sheet.Cells["A1:L1"].Style.Font.Bold = true;
                 sheet.Cells.AutoFitColumns();
                 //Book Genre
-                var genreValidation = sheet.DataValidations.AddListValidation("C2:C100");
+                var genres = new[] {
+                "Fiction","NonFiction","Mystery","Thriller","Romance","Fantasy",
+                "ScienceFiction","Biography","History","Adventure","Children",
+                "SelfHelp","Classic","Travel","Cooking","Horror","GraphicNovel"
+            };
+
+                var genreValidation = sheet.DataValidations.AddListValidation("C2:C1000");
                 genreValidation.ShowErrorMessage = true;
-                genreValidation.ErrorStyle = OfficeOpenXml.DataValidation.ExcelDataValidationWarningStyle.stop;
-                genreValidation.ErrorTitle = "Invalid Format";
+                genreValidation.ErrorStyle = ExcelDataValidationWarningStyle.stop;
+                genreValidation.ErrorTitle = "Invalid Genre";
                 genreValidation.Error = "Please select a valid book genre.";
-                genreValidation.Formula.Values.Add("Fiction");
-                genreValidation.Formula.Values.Add("NonFiction");
-                genreValidation.Formula.Values.Add("Mystery");
-                genreValidation.Formula.Values.Add("Thriller");
-                genreValidation.Formula.Values.Add("Romance");
-                genreValidation.Formula.Values.Add("Fantasy");
-                genreValidation.Formula.Values.Add("ScienceFiction");
-                genreValidation.Formula.Values.Add("Biography");
-                genreValidation.Formula.Values.Add("History");
-                genreValidation.Formula.Values.Add("Adventure");
-                genreValidation.Formula.Values.Add("Children");
-                genreValidation.Formula.Values.Add("SelfHelp");
-                genreValidation.Formula.Values.Add("Classic");
-                genreValidation.Formula.Values.Add("Travel");
-                genreValidation.Formula.Values.Add("Cooking");
-                genreValidation.Formula.Values.Add("Horror");
-                genreValidation.Formula.Values.Add("GraphicNovel");
+                foreach (var g in genres) genreValidation.Formula.Values.Add(g);
 
                 //Formulas
-                sheet.Cells["L2:L100"].Formula = "I2*K2";
+                for (int row = 2; row <= 1000; row++)
+                {
+                    sheet.Cells[row, 12].Formula = $"IF(AND(I{row}<>\"\",K{row}<>\"\"),I{row}*K{row},\"\")";
+                }
 
 
                 fileBytes = package.GetAsByteArray();
@@ -93,9 +95,34 @@ namespace Bookstore.Web.Controllers
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "BookImportTemplate.xlsx");
         }
-        public Task<IActionResult> ReadData()
+        [HttpPost("Books/ImportExcel")]
+        public async Task<IActionResult> ImportExcel([FromForm] ImportBookExcelDto input)
         {
-            return Task.FromResult<IActionResult>(View());
+            if (input.ExcelFile == null || input.ExcelFile.Length == 0)
+                return BadRequest("No file uploaded or file is empty.");
+
+            // Manual validation of file extension
+            var allowedExtensions = new[] { ".xls", ".xlsx" };
+            var extension = Path.GetExtension(input.ExcelFile.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest("Only .xls or .xlsx files are allowed.");
+
+            try
+            {
+                using var ms = new MemoryStream();
+                await input.ExcelFile.CopyToAsync(ms);
+                var fileBytes = ms.ToArray();
+
+                await _bookImportService.ImportBooksFromExcel(fileBytes);
+
+                return Ok(new { success = true, message = "Books imported successfully!" });
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error importing books from Excel", ex);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
 }
+
