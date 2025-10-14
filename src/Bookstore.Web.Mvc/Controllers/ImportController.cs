@@ -15,6 +15,10 @@ namespace Bookstore.Web.Controllers
     public class ImportController : BookstoreControllerBase
     {
         private readonly IBookImportAppService _bookImportService;
+        public ImportController(IBookImportAppService bookImportService)
+        {
+            _bookImportService = bookImportService;
+        }
         [HttpGet("template")]
         public FileResult DownloadImportTemplate()
         {
@@ -98,6 +102,7 @@ namespace Bookstore.Web.Controllers
         [HttpPost("Books/ImportExcel")]
         public async Task<IActionResult> ImportExcel([FromForm] ImportBookExcelDto input)
         {
+            ExcelPackage.License.SetNonCommercialPersonal("Jhon");
             if (input.ExcelFile == null || input.ExcelFile.Length == 0)
                 return BadRequest("No file uploaded or file is empty.");
 
