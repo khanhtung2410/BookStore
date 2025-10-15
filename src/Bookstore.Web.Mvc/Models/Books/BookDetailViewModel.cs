@@ -1,4 +1,4 @@
-﻿using Bookstore.Entities;
+﻿using Bookstore.Entities.Books;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;

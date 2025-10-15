@@ -10,6 +10,7 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <RootNamespace>Bookstore</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+   <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="EPPlus" Version="8.2.1" />
