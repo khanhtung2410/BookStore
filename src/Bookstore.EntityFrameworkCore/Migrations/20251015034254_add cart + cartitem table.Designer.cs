@@ -4,6 +4,7 @@ using Bookstore.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bookstore.Migrations
 {
     [DbContext(typeof(BookstoreDbContext))]
-    partial class BookstoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251015034254_add cart + cartitem table")]
+    partial class addcartcartitemtable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2428,8 +2431,7 @@ namespace Bookstore.Migrations
 
                     b.HasOne("Bookstore.Entities.Books.BookEdition", "BookEdition")
                         .WithMany()
-                        .HasForeignKey("EditionId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("EditionId");
 
                     b.Navigation("BookEdition");
                 });
