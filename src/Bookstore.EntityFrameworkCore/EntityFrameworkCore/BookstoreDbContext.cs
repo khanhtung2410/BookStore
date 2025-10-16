@@ -1,7 +1,8 @@
 ﻿using Abp.Zero.EntityFrameworkCore;
 using Bookstore.Authorization.Roles;
 using Bookstore.Authorization.Users;
-using Bookstore.Entities;
+using Bookstore.Entities.Books;
+using Bookstore.Entities.Carts;
 using Bookstore.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,8 @@ namespace Bookstore.EntityFrameworkCore
         public DbSet<BookBundleItem> BookBundleItems { get; set; }
         public DbSet<BookBundleImage> BookBundleImages { get; set; }
         public DbSet<BookDiscount> BookDiscounts { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
         public BookstoreDbContext(DbContextOptions<BookstoreDbContext> options)
             : base(options)
         {
@@ -28,6 +31,13 @@ namespace Bookstore.EntityFrameworkCore
             modelBuilder.Entity<BookEdition>(entity =>
             {
                 entity.HasIndex(e => e.ISBN).IsUnique();
+            });
+            modelBuilder.Entity<CartItem>(b =>
+            {
+                b.HasOne(i => i.BookEdition)
+                 .WithMany()
+                 .HasForeignKey(i => i.EditionId)
+                 .OnDelete(DeleteBehavior.SetNull); // leave CartItem when edition deleted
             });
         }
 
