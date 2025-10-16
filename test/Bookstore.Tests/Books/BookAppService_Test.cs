@@ -1,7 +1,7 @@
 ﻿using Abp.Runtime.Validation;
 using Bookstore.Books;
 using Bookstore.Books.Dto;
-using Bookstore.Entities.Books;
+using Bookstore.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

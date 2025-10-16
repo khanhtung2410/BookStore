@@ -1,4 +1,4 @@
-﻿using Bookstore.Entities.Books;
+﻿using Bookstore.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,5 +13,6 @@ namespace Bookstore.Books.Dto
         public string Title { get; set; }
         public string Author { get; set; }
         public BookConsts.Genre Genre { get; set; }
+        public decimal SellPrice { get; set; }
     }
 }

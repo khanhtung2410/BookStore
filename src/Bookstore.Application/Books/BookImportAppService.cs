@@ -1,7 +1,7 @@
 ﻿using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Bookstore.Books.Dto;
-using Bookstore.Entities.Books;
+using Bookstore.Entities;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using System;

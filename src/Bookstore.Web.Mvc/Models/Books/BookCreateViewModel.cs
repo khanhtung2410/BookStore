@@ -1,5 +1,5 @@
 ﻿using Bookstore.Books.Dto;
-using Bookstore.Entities.Books;
+using Bookstore.Entities;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;

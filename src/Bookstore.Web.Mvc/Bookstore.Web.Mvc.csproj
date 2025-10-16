@@ -13,7 +13,6 @@
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <MvcRazorExcludeRefAssembliesFromPublish>false</MvcRazorExcludeRefAssembliesFromPublish>
     <PreserveCompilationReferences>true</PreserveCompilationReferences>
-	  <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <None Update="Dockerfile">

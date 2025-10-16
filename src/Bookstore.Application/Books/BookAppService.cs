@@ -3,7 +3,7 @@ using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Abp.UI;
 using Bookstore.Books.Dto;
-using Bookstore.Entities.Books;
+using Bookstore.Entities;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
 using System;
