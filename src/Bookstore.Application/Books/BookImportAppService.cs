@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services;
 using Abp.Domain.Repositories;
+using Abp.UI.Inputs;
 using Bookstore.Books.Dto;
 using Bookstore.Entities.Books;
 using OfficeOpenXml;
@@ -86,7 +87,7 @@ namespace Bookstore.Books
                         var existingBook = await _bookRepository.FirstOrDefaultAsync(b => b.Title == title && b.Author == author);
                         if (existingBook != null)
                         {
-                            var existingEdition = await _bookEditionRepository.FirstOrDefaultAsync(e => e.BookId == existingBook.Id && e.ISBN == isbn);
+                            var existingEdition = await _bookEditionRepository.FirstOrDefaultAsync(e => e.ISBN == isbn);
                             if (existingEdition != null)
                             {
                                 var inventory = await _bookInventoryRepository.FirstOrDefaultAsync(i => i.BookEditionId == existingEdition.Id);
@@ -158,6 +159,6 @@ namespace Bookstore.Books
                     }
                 }
             }
-        }   
+        }
     }
 }
