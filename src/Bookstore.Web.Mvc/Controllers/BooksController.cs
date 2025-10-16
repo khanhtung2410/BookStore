@@ -1,5 +1,4 @@
-﻿using Abp.Runtime.Validation;
-using Bookstore.Books;
+﻿using Bookstore.Books;
 using Bookstore.Books.Dto;
 using Bookstore.Controllers;
 using Bookstore.Entities.Books;
@@ -236,7 +235,6 @@ namespace Bookstore.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [DisableValidation]
         public async Task<IActionResult> Update(int id, BookUpdateViewModel model)
         {
             if (id != model.Id)

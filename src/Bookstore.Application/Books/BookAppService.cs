@@ -1,142 +1,106 @@
-﻿using Abp.Application.Services;
+﻿using Abp.Application.Editions;
+using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Abp.UI;
 using Bookstore.Books.Dto;
 using Bookstore.Entities.Books;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.AccessControl;
+using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Schema;
 
 namespace Bookstore.Books
 {
-    /// <summary>
-    /// Application service for managing books, editions, and inventories.
-    /// </summary>
     public class BookAppService : ApplicationService, IBookAppService
     {
         private readonly IRepository<Book, int> _bookRepository;
         private readonly IRepository<BookInventory, int> _bookInventoryRepository;
         private readonly IRepository<BookEdition, int> _bookEditionRepository;
 
-        /// <summary>
-        /// Constructor for <see cref="BookAppService"/>.
-        /// </summary>
-        public BookAppService(
-            IRepository<Book, int> bookRepository,
-            IRepository<BookInventory, int> bookInventoryRepository,
-            IRepository<BookEdition, int> bookEditionRepository)
+        public BookAppService(IRepository<Book, int> bookRepository, IRepository<BookInventory, int> bookInventoryRepository, IRepository<BookEdition, int> bookEditionRepository)
         {
             _bookRepository = bookRepository;
             _bookInventoryRepository = bookInventoryRepository;
             _bookEditionRepository = bookEditionRepository;
         }
-
-        /// <summary>
-        /// Creates a new book with editions and inventories.
-        /// </summary>
-        /// <param name="input">The book data.</param>
-        /// <returns>The created book ID.</returns>
-        /// <exception cref="UserFriendlyException">Thrown when no editions are provided.</exception>
         [Abp.Authorization.AbpAuthorize("Pages.Books.Create")]
         public async Task<int> CreateBook(CreateBookDto input)
         {
-            if (input.Editions == null || input.Editions.Count==0)
+            if (input.Editions == null || !input.Editions.Any())
                 throw new UserFriendlyException("A book must have at least one edition.");
-
             var book = new Book(
-                input.Title ?? throw new ArgumentNullException(nameof(input.Title)),
-                input.Author ?? throw new ArgumentNullException(nameof(input.Author)),
+                input.Title,
+                input.Author,
                 input.Genre,
-                input.Description ?? throw new ArgumentNullException(nameof(input.Description))
+                input.Description
             );
-
             var createdBookId = await _bookRepository.InsertAndGetIdAsync(book);
-
             foreach (var editionDto in input.Editions)
             {
                 var edition = new BookEdition(
                     createdBookId,
                     editionDto.Format,
-                    editionDto.Publisher ?? throw new ArgumentNullException(nameof(editionDto.Publisher)),
+                    editionDto.Publisher,
                     editionDto.PublishedDate ?? DateTime.Now,
-                    editionDto.ISBN ?? throw new ArgumentNullException(nameof(editionDto.ISBN))
+                    editionDto.ISBN
                 );
-
                 var editionId = await _bookEditionRepository.InsertAndGetIdAsync(edition);
 
-                if (editionDto.Inventory != null)
-                {
-                    var inventory = new BookInventory(
-                        editionId,
-                        editionDto.Inventory.BuyPrice,
-                        editionDto.Inventory.SellPrice,
-                        editionDto.Inventory.StockQuantity
-                    );
-                    await _bookInventoryRepository.InsertAsync(inventory);
-                }
+                // 3️⃣ For each Edition, create its Inventory
+                var inventory = new BookInventory(
+                    editionId,
+                    editionDto.Inventory.BuyPrice,
+                    editionDto.Inventory.SellPrice,
+                    editionDto.Inventory.StockQuantity
+                );
+                await _bookInventoryRepository.InsertAsync(inventory);
             }
 
             return createdBookId;
         }
-
-        /// <summary>
-        /// Deletes a book by its ID.
-        /// </summary>
-        /// <param name="input">The delete DTO containing the book ID.</param>
         [Abp.Authorization.AbpAuthorize("Pages.Books.Delete")]
         public async Task DeleteBook(DeleteBookDto input)
         {
             await _bookRepository.DeleteAsync(input.Id);
         }
 
-        /// <summary>
-        /// Gets all books.
-        /// </summary>
-        /// <returns>List of books.</returns>
         public async Task<List<ListBookDto>> GetAllBooks()
         {
             var books = await _bookRepository.GetAllListAsync();
             return ObjectMapper.Map<List<ListBookDto>>(books);
         }
 
-        /// <summary>
-        /// Gets a single book including editions and inventories.
-        /// </summary>
-        /// <param name="id">The book ID.</param>
-        /// <returns>Book DTO.</returns>
-        /// <exception cref="UserFriendlyException">Thrown when book is not found.</exception>
         public async Task<BookDto> GetBook(int id)
         {
-            var book = await _bookRepository.GetAllIncluding(b => b.Editions)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var book = await _bookRepository.GetAllIncluding(b => b.Editions).FirstOrDefaultAsync(b => b.Id == id);
 
             if (book == null)
                 throw new UserFriendlyException("Book not found.");
-
             var bookDto = new BookDto
             {
                 Id = book.Id,
-                Title = book.Title ?? string.Empty,
-                Author = book.Author ?? string.Empty,
-                Description = book.Description ?? string.Empty,
+                Title = book.Title,
+                Author = book.Author,
+                Description = book.Description,
                 Genre = book.Genre,
                 Editions = new List<BookEditionDto>()
             };
-
-            foreach (var edition in book.Editions ?? Enumerable.Empty<BookEdition>())
+            foreach (var edition in book.Editions)
             {
                 var inventory = await _bookInventoryRepository.FirstOrDefaultAsync(bi => bi.BookEditionId == edition.Id);
-
                 bookDto.Editions.Add(new BookEditionDto
                 {
                     Id = edition.Id,
                     BookId = edition.BookId,
                     Format = edition.Format,
-                    Publisher = edition.Publisher ?? string.Empty,
+                    Publisher = edition.Publisher,
                     PublishedDate = edition.PublishedDate,
-                    ISBN = edition.ISBN ?? string.Empty,
+                    ISBN = edition.ISBN,
                     Inventory = inventory != null ? new BookInventoryDto
                     {
                         Id = inventory.Id,
@@ -148,57 +112,58 @@ namespace Bookstore.Books
                     Discount = null
                 });
             }
-
             return bookDto;
         }
-
-        /// <summary>
-        /// Updates a book and its editions/inventories.
-        /// </summary>
-        /// <param name="input">The book update DTO.</param>
-        /// <exception cref="UserFriendlyException">Thrown when book is not found.</exception>
         [Abp.Authorization.AbpAuthorize("Pages.Books.Update")]
         public async Task UpdateBook(UpdateBookDto input)
         {
-            var book = await _bookRepository.GetAllIncluding(b => b.Editions)
+            var book = await _bookRepository
+                .GetAllIncluding(b => b.Editions)
                 .FirstOrDefaultAsync(b => b.Id == input.Id);
 
             if (book == null)
-                throw new UserFriendlyException("Book not found.");
+                throw new UserFriendlyException("Book not found");
 
-            book.Title = input.Title ?? string.Empty;
-            book.Author = input.Author ?? string.Empty;
-            book.Description = input.Description ?? string.Empty;
+            // Update main fields
+            book.Title = input.Title;
+            book.Author = input.Author;
+            book.Description = input.Description;
             book.Genre = input.Genre;
 
             var incomingEditionIds = input.Editions?.Where(e => e.Id > 0).Select(e => e.Id).ToList() ?? new List<int>();
 
-            // Remove deleted editions
-            var deletedEditions = book.Editions?.Where(e => !incomingEditionIds.Contains(e.Id)).ToList() ?? new List<BookEdition>();
+            // Delete removed editions
+            var deletedEditions = book.Editions
+                .Where(e => !incomingEditionIds.Contains(e.Id))
+                .ToList();
+
             foreach (var del in deletedEditions)
             {
                 await _bookEditionRepository.DeleteAsync(del);
-                book.Editions?.Remove(del);
+                book.Editions.Remove(del);
             }
 
-            // Add/update editions
+            // Add/update editions and inventories
             foreach (var editionInput in input.Editions)
             {
                 BookEdition edition;
 
                 if (editionInput.Id > 0)
                 {
-                    // Update existing
-                    edition = await _bookEditionRepository.GetAllIncluding(e => e.Inventory)
+                    // Existing edition
+                    edition = await _bookEditionRepository
+                        .GetAllIncluding(e => e.Inventory)
                         .FirstOrDefaultAsync(e => e.Id == editionInput.Id);
 
-                    if (edition == null) continue;
+                    if (edition == null)
+                        continue;
 
                     edition.Format = editionInput.Format;
-                    edition.Publisher = editionInput.Publisher ?? string.Empty;
+                    edition.Publisher = editionInput.Publisher;
                     edition.PublishedDate = editionInput.PublishedDate ?? DateTime.Now;
-                    edition.ISBN = editionInput.ISBN ?? string.Empty;
+                    edition.ISBN = editionInput.ISBN;
 
+                    // Inventory update
                     if (editionInput.Inventory != null)
                     {
                         if (edition.Inventory != null)
@@ -228,13 +193,13 @@ namespace Bookstore.Books
                     edition = new BookEdition(
                         book.Id,
                         editionInput.Format,
-                        editionInput.Publisher ?? string.Empty,
+                        editionInput.Publisher,
                         editionInput.PublishedDate ?? DateTime.Now,
-                        editionInput.ISBN ?? string.Empty
+                        editionInput.ISBN
                     );
 
                     await _bookEditionRepository.InsertAsync(edition);
-                    await CurrentUnitOfWork.SaveChangesAsync();
+                    await CurrentUnitOfWork.SaveChangesAsync(); // Ensure edition.Id is generated
 
                     if (editionInput.Inventory != null)
                     {
@@ -244,15 +209,18 @@ namespace Bookstore.Books
                             editionInput.Inventory.SellPrice,
                             editionInput.Inventory.StockQuantity
                         );
+
                         await _bookInventoryRepository.InsertAsync(newInventory);
                     }
 
-                    book.Editions?.Add(edition);
+                    book.Editions.Add(edition);
                 }
             }
 
             await _bookRepository.UpdateAsync(book);
             await CurrentUnitOfWork.SaveChangesAsync();
         }
+
+
     }
 }

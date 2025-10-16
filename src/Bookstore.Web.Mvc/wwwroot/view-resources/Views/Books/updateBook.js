@@ -2,6 +2,7 @@
     const container = $('#edition-container');
     const addButton = $('#addEditionBtn');
     let editionIndex = container.children('.edition-item').length; // continue after loaded editions
+
     // Function to create a new edition block
     function addEdition(index) {
         const newEditionHtml = `

@@ -12,7 +12,6 @@ namespace Bookstore.Web.Models.Books
         public string Author { get; set; }
         public BookConsts.Genre Genre { get; set; }
         public string Description { get; set; }
-        [Microsoft.AspNetCore.Mvc.ModelBinding.BindNever]
         public IEnumerable<SelectListItem> GenreList { get; set; }
         public List<BookEditionViewModel> Editions { get; set; } = new();
     }

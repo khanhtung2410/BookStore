@@ -10,6 +10,7 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <UserSecretsId>AbpCompanyName-Bookstore-56C2EF2F-ABD6-4EFC-AAF2-2E81C34E8FB1</UserSecretsId>
     <RootNamespace>Bookstore</RootNamespace>
+	  <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Localization\SourceFiles\*.xml" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
