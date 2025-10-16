@@ -1,5 +1,5 @@
 ﻿using Abp.AutoMapper;
-using Bookstore.Entities;
+using Bookstore.Entities.Books;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;

@@ -1,4 +1,4 @@
-﻿using Bookstore.Entities;
+﻿using Bookstore.Entities.Books;
 using Microsoft.AspNetCore.Antiforgery;
 using System;
 using System.Collections.Generic;

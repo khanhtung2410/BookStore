@@ -1,4 +1,5 @@
 ﻿using Abp.Domain.Entities.Auditing;
+using Bookstore.Entities.Books;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -18,7 +19,7 @@ namespace Bookstore.Entities.Carts
         public int? EditionId { get; set; }
         [Required]
         public int Quantity { get; set; }
-        public virtual Books.BookEdition? BookEdition { get; set; }
+        public virtual BookEdition? BookEdition { get; set; }
 
         public CartItem() { }
         public CartItem(Guid cartId, int editionId, int quantity)

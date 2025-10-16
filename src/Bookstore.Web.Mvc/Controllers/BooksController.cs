@@ -1,7 +1,7 @@
 ﻿using Bookstore.Books;
 using Bookstore.Books.Dto;
 using Bookstore.Controllers;
-using Bookstore.Entities;
+using Bookstore.Entities.Books;
 using Bookstore.Web.Models.Books;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;

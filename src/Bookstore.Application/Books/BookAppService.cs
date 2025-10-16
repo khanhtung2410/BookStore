@@ -1,18 +1,13 @@
-﻿using Abp.Application.Editions;
-using Abp.Application.Services;
+﻿using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Abp.UI;
 using Bookstore.Books.Dto;
-using Bookstore.Entities;
-using Microsoft.AspNetCore.Components.Forms;
+using Bookstore.Entities.Books;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Schema;
 
 namespace Bookstore.Books
 {
@@ -157,7 +152,13 @@ namespace Bookstore.Books
 
                     if (edition == null)
                         continue;
+                    var duplicate = await _bookEditionRepository
+      .FirstOrDefaultAsync(e => e.ISBN == editionInput.ISBN && e.Id != editionInput.Id);
 
+                    if (duplicate != null)
+                    {
+                        throw new UserFriendlyException($"Another edition with ISBN {editionInput.ISBN} already exists.");
+                    }
                     edition.Format = editionInput.Format;
                     edition.Publisher = editionInput.Publisher;
                     edition.PublishedDate = editionInput.PublishedDate ?? DateTime.Now;
@@ -189,7 +190,15 @@ namespace Bookstore.Books
                 }
                 else
                 {
-                    // New edition
+                    var existingEdition = await _bookEditionRepository
+       .FirstOrDefaultAsync(e => e.ISBN == editionInput.ISBN);
+
+                    if (existingEdition != null)
+                    {
+                        throw new UserFriendlyException($"An edition with ISBN {editionInput.ISBN} already exists.");
+                    }
+
+                    // Safe to insert
                     edition = new BookEdition(
                         book.Id,
                         editionInput.Format,
@@ -199,7 +208,7 @@ namespace Bookstore.Books
                     );
 
                     await _bookEditionRepository.InsertAsync(edition);
-                    await CurrentUnitOfWork.SaveChangesAsync(); // Ensure edition.Id is generated
+                    await CurrentUnitOfWork.SaveChangesAsync();
 
                     if (editionInput.Inventory != null)
                     {
@@ -209,7 +218,6 @@ namespace Bookstore.Books
                             editionInput.Inventory.SellPrice,
                             editionInput.Inventory.StockQuantity
                         );
-
                         await _bookInventoryRepository.InsertAsync(newInventory);
                     }
 
