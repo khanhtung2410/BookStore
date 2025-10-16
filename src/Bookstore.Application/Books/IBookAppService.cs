@@ -21,8 +21,6 @@ namespace Bookstore.Books
     public interface IBookImportAppService : IApplicationService
     {
         Task ImportBooksFromExcel(byte[] fileBytes);
-        Task ImportBookHandle(UpdateBookDto input);
-
     }
 
 }

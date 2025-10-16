@@ -27,12 +27,6 @@ namespace Bookstore.Books
             _bookInventoryRepository = bookInventoryRepository;
             _bookEditionRepository = bookEditionRepository;
         }
-
-        public Task ImportBookHandle(UpdateBookDto input)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task ImportBooksFromExcel(byte[] fileBytes)
         {
             if (fileBytes == null || fileBytes.Length == 0)
@@ -51,17 +45,17 @@ namespace Bookstore.Books
                 {
                     try
                     {
-                        var title = worksheet.Cells[row, 1].Text;
-                        var author = worksheet.Cells[row, 2].Text;
-                        var genreText = worksheet.Cells[row, 3].Text;
-                        var description = worksheet.Cells[row, 4].Text;
-                        var formatText = worksheet.Cells[row, 5].Text;
-                        var publisher = worksheet.Cells[row, 6].Text;
-                        var publishedDateText = worksheet.Cells[row, 7].Text;
-                        var isbn = worksheet.Cells[row, 8].Text;
-                        var buyPriceText = worksheet.Cells[row, 9].Text;
-                        var sellPriceText = worksheet.Cells[row, 10].Text;
-                        var stockQuantityText = worksheet.Cells[row, 11].Text;
+                        var title = worksheet.Cells[row, 1].Text?.Trim();
+                        var author = worksheet.Cells[row, 2].Text?.Trim();
+                        var genreText = worksheet.Cells[row, 3].Text?.Trim();
+                        var description = worksheet.Cells[row, 4].Text?.Trim();
+                        var formatText = worksheet.Cells[row, 5].Text?.Trim();
+                        var publisher = worksheet.Cells[row, 6].Text?.Trim();
+                        var publishedDateText = worksheet.Cells[row, 7].Text?.Trim();
+                        var isbn = worksheet.Cells[row, 8].Text?.Trim();
+                        var buyPriceText = worksheet.Cells[row, 9].Text?.Trim();
+                        var sellPriceText = worksheet.Cells[row, 10].Text?.Trim();
+                        var stockQuantityText = worksheet.Cells[row, 11].Text?.Trim();
 
                         if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(author))
                             throw new ArgumentException($"Missing required fields in row {row}.");
@@ -89,6 +83,7 @@ namespace Bookstore.Books
                         if (existingBook != null)
                         {
                             var existingEdition = await _bookEditionRepository.FirstOrDefaultAsync(e => e.BookId == existingBook.Id && e.ISBN == isbn);
+                            // Check if the edition exists
                             if (existingEdition != null)
                             {
                                 var inventory = await _bookInventoryRepository.FirstOrDefaultAsync(i => i.BookEditionId == existingEdition.Id);

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Bookstore.Books.Dto
 {
+    [AutoMapTo(typeof(BookEdition))]
     public class UpdateBookEditionDto
     {
         public int Id { get; set; }
@@ -22,7 +23,7 @@ namespace Bookstore.Books.Dto
         [Required]
         public DateTime? PublishedDate { get; set; }
         [Required]
-        [StringLength(50)]
+        [StringLength(13)]
         public string ISBN { get; set; }
 
         [Required]

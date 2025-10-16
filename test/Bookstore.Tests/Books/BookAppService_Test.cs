@@ -1,4 +1,5 @@
 ﻿using Abp.Runtime.Validation;
+using Abp.UI;
 using Bookstore.Books;
 using Bookstore.Books.Dto;
 using Bookstore.Entities.Books;
@@ -489,5 +490,49 @@ namespace Bookstore.Tests.Books
 
             await Assert.ThrowsAsync<AbpValidationException>(() => _bookAppService.CreateBook(input));
         }
+        [Fact]
+        public async Task GetBook_Should_Throw_When_Book_Not_Found()
+        {
+            await UsingDbContextAsync(async context =>
+            {
+                context.Books.RemoveRange(context.Books);
+                context.BookEditions.RemoveRange(context.BookEditions);
+                context.BookInventories.RemoveRange(context.BookInventories);
+                await context.SaveChangesAsync();
+            });
+
+            await Assert.ThrowsAsync<UserFriendlyException>(() => _bookAppService.GetBook(9999));
+        }
+        [Fact]
+        public async Task CreateBook_Should_Throw_When_No_Editions_Provided()
+        {
+            var input = new CreateBookDto
+            {
+                Title = "Book Without Edition",
+                Author = "Author X",
+                Genre = BookConsts.Genre.Fiction,
+                Description = "This should fail",
+                Editions = new List<CreateBookEditionDto>() // empty list
+            };
+
+            await Assert.ThrowsAsync<AbpValidationException>(() => _bookAppService.CreateBook(input));
+        }
+        [Fact]
+        public async Task UpdateBook_Should_Throw_When_Book_Not_Found()
+        {
+            var updateInput = new UpdateBookDto
+            {
+                Id = 9999,
+                Title = "Nonexistent Book",
+                Author = "Nobody",
+                Genre = BookConsts.Genre.Fiction,
+                Description = "Should throw",
+                Editions = new List<UpdateBookEditionDto>()
+            };
+
+            await Assert.ThrowsAsync<AbpValidationException>(() => _bookAppService.UpdateBook(updateInput));
+
+        }
+
     }
 }

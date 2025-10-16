@@ -4,7 +4,7 @@ namespace Bookstore.Roles.Dto
 {
     public class PagedRoleResultRequestDto : PagedResultRequestDto
     {
-        public string Keyword { get; set; }
+        public string Keyword { get; set; } = string.Empty;
     }
 }
 
