@@ -72,16 +72,16 @@ namespace Bookstore.Migrations
                 oldNullable: true);
 
             migrationBuilder.CreateTable(
-                name: "Carts",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatorUserId = table.Column<long>(type: "bigint", nullable: true),
-                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifierUserId = table.Column<long>(type: "bigint", nullable: true)
-                },
+                    name: "Carts",
+    columns: table => new
+    {
+        Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+        UserId = table.Column<long>(type: "bigint", nullable: true), // change from Guid to long
+        CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+        CreatorUserId = table.Column<long>(type: "bigint", nullable: true),
+        LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+        LastModifierUserId = table.Column<long>(type: "bigint", nullable: true)
+    },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Carts", x => x.Id);

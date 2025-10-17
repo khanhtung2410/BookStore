@@ -16,16 +16,16 @@ namespace Bookstore.Entities.Carts
         [ForeignKey(nameof(Cart))]
         public Guid CartId { get; set; }
         [ForeignKey(nameof(Books.BookEdition))]
-        public int? EditionId { get; set; }
+        public int? BookEditionId { get; set; }
         [Required]
         public int Quantity { get; set; }
         public virtual BookEdition? BookEdition { get; set; }
 
         public CartItem() { }
-        public CartItem(Guid cartId, int editionId, int quantity)
+        public CartItem(Guid cartId, int bookEditionId, int quantity)
         {
             CartId = cartId;
-            EditionId = editionId;
+            BookEditionId = bookEditionId;
             Quantity = quantity;
         }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

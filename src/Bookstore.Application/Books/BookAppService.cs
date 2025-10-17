@@ -109,6 +109,53 @@ namespace Bookstore.Books
             }
             return bookDto;
         }
+        public async Task<BookDto> GetBookEditionByIdAsync(int bookId, int bookEditionId)
+        {
+            var book = await _bookRepository
+                .GetAllIncluding(b => b.Editions).Include(b=> b.Editions)
+                .ThenInclude(e => e.Inventory)
+                .FirstOrDefaultAsync(b => b.Id == bookId);
+
+            if (book == null)
+                throw new UserFriendlyException("Book not found.");
+
+            // Find the specific edition
+            var edition = book.Editions.FirstOrDefault(e => e.Id == bookEditionId);
+            if (edition == null)
+                throw new UserFriendlyException("Book edition not found.");
+
+            var bookDto = new BookDto
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                Description = book.Description,
+                Genre = book.Genre,
+                Editions = new List<BookEditionDto>   
+        {
+            new BookEditionDto
+            {
+                Id = edition.Id,
+                Format = edition.Format,
+                ISBN = edition.ISBN,
+                PublishedDate = edition.PublishedDate,
+                Publisher = edition.Publisher,
+                Inventory = edition.Inventory != null
+                    ? new BookInventoryDto
+                    {
+                        Id = edition.Inventory.Id,
+                        StockQuantity = edition.Inventory.StockQuantity,
+                        BuyPrice = edition.Inventory.BuyPrice,
+                        SellPrice = edition.Inventory.SellPrice
+                    }
+                    : null
+            }
+        }
+            };
+
+            return bookDto;
+        }
+
         [Abp.Authorization.AbpAuthorize("Pages.Books.Update")]
         public async Task UpdateBook(UpdateBookDto input)
         {

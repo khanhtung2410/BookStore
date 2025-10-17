@@ -13,6 +13,5 @@ namespace Bookstore.Books.Dto
         public string Title { get; set; }
         public string Author { get; set; }
         public BookConsts.Genre Genre { get; set; }
-        public decimal SellPrice { get; set; }
     }
 }

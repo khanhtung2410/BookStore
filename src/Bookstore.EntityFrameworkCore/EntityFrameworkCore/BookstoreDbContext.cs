@@ -36,7 +36,7 @@ namespace Bookstore.EntityFrameworkCore
             {
                 b.HasOne(i => i.BookEdition)
                  .WithMany()
-                 .HasForeignKey(i => i.EditionId)
+                 .HasForeignKey(i => i.BookEditionId)
                  .OnDelete(DeleteBehavior.SetNull); // leave CartItem when edition deleted
             });
         }

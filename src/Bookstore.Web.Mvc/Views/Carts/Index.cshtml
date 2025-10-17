@@ -1,0 +1,75 @@
+﻿@model Bookstore.Carts.Dto.CartDto
+
+@{
+    ViewBag.Title = "My Cart";
+}
+
+<div class="container mt-5">
+    <h3>@ViewBag.Title</h3>
+
+    @if (Model.Items == null || !Model.Items.Any())
+    {
+        <div class="alert alert-info">
+            Your cart is empty. Add some thing to it
+        </div>
+        <a href="@Url.Action("Index", "Books")" class="btn btn-primary">Browse Books</a>
+    }
+    else
+    {
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Format</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Subtotal</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@(item.BookTitle ?? "Unknown")</td>
+                        <td>@(item.BookAuthor?? "Unknown")</td>
+                        <td>@(item.BookEdition.Format   )</td>
+                        <td>
+                            <form asp-action="UpdateCartItemQuantityAsync" method="post" class="d-inline">
+                                <input type="hidden" name="CartItemId" value="@item.Id" />
+                                <input type="number"
+                                       name="NewQuantity"
+                                       value="@item.Quantity"
+                                       min="1"
+                                       max="@(item.BookEdition?.Inventory?.StockQuantity ?? 1)"
+                                       class="form-control d-inline w-50" />
+                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            </form>
+                        </td>
+                        <td>@(item.BookEdition?.Inventory?.SellPrice.ToString("C0") ?? "0")</td>
+                        <td>@((item.Quantity * (item.BookEdition?.Inventory?.SellPrice ?? 0)).ToString("C0"))</td>
+                        <td>
+                            <form asp-action="RemoveItem" method="post">
+                                <input type="hidden" name="CartItemId" value="@item.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <form asp-action="ClearCart" method="post">
+            <input type="hidden" name="userId" value="@Model.UserId" />
+            <button type="submit" class="btn btn-warning">Clear Cart</button>
+        </form>
+    }
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mt-3">
+        @TempData["ErrorMessage"]
+    </div>
+}

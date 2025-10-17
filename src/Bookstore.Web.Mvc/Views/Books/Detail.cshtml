@@ -64,6 +64,14 @@
                         <dd class="col-sm-9" id="sellPriceText"></dd>
                     </dl>
                 </div>
+                <form asp-action="AddItem" asp-controller="Carts" method="post" class="d-inline">
+                    <input type="hidden" name="bookEditionId"/>
+                    <input type="hidden" name="bookId" value="@Model.Id" />
+                    <input type="hidden" name="quantity" value="1" />
+                    <button type="submit" class="btn btn-warning btn-sm mt-2 w-100">
+                        Add to Cart
+                    </button>
+                </form>
             }
             else
             {

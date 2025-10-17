@@ -4,6 +4,7 @@ using Bookstore.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bookstore.Migrations
 {
     [DbContext(typeof(BookstoreDbContext))]
-    partial class BookstoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251017115436_change EditionId to BookEditionId in cartitem table")]
+    partial class changeEditionIdtoBookEditionIdincartitemtable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2016,8 +2019,8 @@ namespace Bookstore.Migrations
                     b.Property<long?>("LastModifierUserId")
                         .HasColumnType("bigint");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -2032,6 +2035,9 @@ namespace Bookstore.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("BookEditionId")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("CartId")
                         .HasColumnType("uniqueidentifier");
 
@@ -2040,9 +2046,6 @@ namespace Bookstore.Migrations
 
                     b.Property<long?>("CreatorUserId")
                         .HasColumnType("bigint");
-
-                    b.Property<int?>("EditionId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("datetime2");
@@ -2055,9 +2058,9 @@ namespace Bookstore.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CartId");
+                    b.HasIndex("BookEditionId");
 
-                    b.HasIndex("EditionId");
+                    b.HasIndex("CartId");
 
                     b.ToTable("CartItems");
                 });
@@ -2420,16 +2423,16 @@ namespace Bookstore.Migrations
 
             modelBuilder.Entity("Bookstore.Entities.Carts.CartItem", b =>
                 {
+                    b.HasOne("Bookstore.Entities.Books.BookEdition", "BookEdition")
+                        .WithMany()
+                        .HasForeignKey("BookEditionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Bookstore.Entities.Carts.Cart", null)
                         .WithMany("Items")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Bookstore.Entities.Books.BookEdition", "BookEdition")
-                        .WithMany()
-                        .HasForeignKey("EditionId")
-                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("BookEdition");
                 });

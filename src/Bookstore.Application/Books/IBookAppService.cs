@@ -17,6 +17,7 @@ namespace Bookstore.Books
         Task DeleteBook(DeleteBookDto input);
         Task<List<ListBookDto>> GetAllBooks();
         Task<BookDto> GetBook(int id);
+        Task<BookDto> GetBookEditionByIdAsync(int bookId, int bookEditionId);
     }
     public interface IBookImportAppService : IApplicationService
     {

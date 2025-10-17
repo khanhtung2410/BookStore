@@ -7,11 +7,11 @@
     const stockText = document.getElementById("stockText");
     const buyPriceText = document.getElementById("buyPriceText");
     const sellPriceText = document.getElementById("sellPriceText");
- 
+    const addToCartInput = document.querySelector("input[name='bookEditionId']");
+
     function showEdition(id) {
         const edition = editions.find(e => e.Id === parseInt(id));
         if (!edition) return;
-
 
         publisherText.textContent = edition.Publisher || "N/A";
         publishedText.textContent = edition.PublishedDate
@@ -23,12 +23,14 @@
         stockText.textContent = inv ? inv.StockQuantity : "N/A";
         buyPriceText.textContent = inv ? inv.BuyPrice.toFixed(2) : "N/A";
         sellPriceText.textContent = inv ? inv.SellPrice.toFixed(2) : "N/A";
+
+       
+        addToCartInput.value = edition.Id;
     }
 
     if (editionSelect) {
-        editionSelect.addEventListener("change", e => {
-            showEdition(e.target.value);
-        });
+        editionSelect.addEventListener("change", e => showEdition(e.target.value));
+
         // Initialize with first edition
         if (editions.length > 0) {
             editionSelect.value = editions[0].Id.toString();

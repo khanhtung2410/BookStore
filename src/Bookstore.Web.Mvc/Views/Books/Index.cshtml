@@ -1,12 +1,17 @@
 ﻿@model Bookstore.Web.Models.Books.BookListViewModel
+@using System.Security.Claims
 
 @{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     ViewBag.Title = "Books List";
 }
 
 <div class="container mt-5">
     <h1 class="mb-4">Books</h1>
     <button class="btn btn-primary mb-4 btn-import">Import Book</button>
+    <a href="@Url.Action("Index", "Carts")" class="btn btn-primary mb-4 btn-view-cart">
+        View Cart
+    </a>
     @if (Model.Books != null && Model.Books.Any())
     {
         <div class="list-group shadow-sm">

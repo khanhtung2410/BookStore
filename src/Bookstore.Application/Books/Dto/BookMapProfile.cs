@@ -13,7 +13,10 @@ namespace Bookstore.Books.Dto
         public BookMapProfile()
         {
             CreateMap<Book, ListBookDto>();
-            CreateMap<BookEdition, BookEditionDto>();
+            CreateMap<BookEdition, BookEditionDto>()
+                .ForMember(dest => dest.Inventory, opt => opt.MapFrom(src => src.Inventory));
+            CreateMap<Book, BookDto>()
+                .ForMember(dest => dest.Editions, opt => opt.MapFrom(src => src.Editions));
             CreateMap<BookInventory, BookInventoryDto>();
         }
     }
