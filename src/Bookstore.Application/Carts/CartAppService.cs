@@ -116,10 +116,16 @@ namespace Bookstore.Carts
             }
             await CurrentUnitOfWork.SaveChangesAsync();
 
-            var updatedCart = await _cartRepository.GetAllIncluding(
-            c => c.Items).Include(c => c.Items).ThenInclude(i => i.BookEdition).FirstOrDefaultAsync(c => c.Id == cart.Id);
+            var updatedCart = await _cartRepository
+                .GetAllIncluding(c => c.Items)
+                .Include(c => c.Items)
+                    .ThenInclude(i => i.BookEdition)
+                        .ThenInclude(be => be.Book)
+                .Include(c => c.Items)
+                    .ThenInclude(i => i.BookEdition.Inventory)
+                .FirstOrDefaultAsync(c => c.Id == cart.Id);
 
-            return ObjectMapper.Map<Dto.CartDto>(cart);
+            return ObjectMapper.Map<Dto.CartDto>(updatedCart);
         }
         public async Task ClearCartAsync(long userId)
         {

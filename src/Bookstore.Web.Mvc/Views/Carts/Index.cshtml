@@ -32,9 +32,9 @@
                 @foreach (var item in Model.Items)
                 {
                     <tr>
-                        <td>@(item.BookTitle ?? "Unknown")</td>
-                        <td>@(item.BookAuthor?? "Unknown")</td>
-                        <td>@(item.BookEdition.Format   )</td>
+                        <td>@(item.Book.Title ?? "Unknown")</td>
+                        <td>@(item.Book.Author?? "Unknown")</td>
+                        <td>@(item.BookEdition.Format)</td>
                         <td>
                             <form asp-action="UpdateCartItemQuantityAsync" method="post" class="d-inline">
                                 <input type="hidden" name="CartItemId" value="@item.Id" />

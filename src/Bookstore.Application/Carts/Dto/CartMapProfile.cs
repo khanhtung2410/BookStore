@@ -11,10 +11,13 @@ namespace Bookstore.Carts.Dto
     {
         public CartMapProfile()
         {
-            CreateMap<Cart, CartDto>();
             CreateMap<CartItem, CartItemDto>()
-                .ForMember(dest => dest.BookEdition, opt => opt.MapFrom(src => src.BookEdition))
-                .ForMember(dest => dest.Book, opt => opt.MapFrom(src => src.BookEdition.Book));
+                .ForMember(dest => dest.BookTitle, opt => opt.MapFrom(src => src.BookEdition.Book.Title))
+                .ForMember(dest => dest.BookAuthor, opt => opt.MapFrom(src => src.BookEdition.Book.Author))
+                .ForMember(dest => dest.BookEdition, opt => opt.MapFrom(src => src.BookEdition));
+
+            CreateMap<Cart, CartDto>()
+                .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
         }
     }
 }
