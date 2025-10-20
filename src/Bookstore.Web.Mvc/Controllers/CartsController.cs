@@ -85,14 +85,11 @@ namespace Bookstore.Web.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpPost]
         public async Task<IActionResult> UpdateCartItemQuantity(UpdateCartItemDto input)
         {
-            var userId = long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
             try
             {
-                await _cartAppService.UpdateCartItemQuantityAsync(userId, input);
+                await _cartAppService.UpdateCartItemQuantityAsync(input);
             }
             catch (UserFriendlyException ex)
             {

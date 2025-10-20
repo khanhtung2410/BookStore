@@ -74,8 +74,8 @@ namespace Bookstore.Books
         {
             var book = await _bookRepository.GetAllIncluding(b => b.Editions).FirstOrDefaultAsync(b => b.Id == id);
 
-            if (book == null)
-                throw new UserFriendlyException("Book not found.");
+            if (book == null|| book.IsDeleted)
+               return null;
             var bookDto = new BookDto
             {
                 Id = book.Id,

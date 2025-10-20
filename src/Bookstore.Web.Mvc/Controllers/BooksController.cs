@@ -45,9 +45,10 @@ namespace Bookstore.Web.Controllers
         public async Task<ActionResult> Detail(int id)
         {
             var book = await _bookAppService.GetBook(id);
-            if (book == null)
+            if (book == null )
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "This book is no longer available.";
+                return RedirectToAction("Index"); // redirect to list page
             }
             var model = new BookDetailViewModel
             {

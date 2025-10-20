@@ -1,9 +1,28 @@
 ﻿@model Bookstore.Carts.Dto.CartDto
-
+@using System.Security.Claims
 @{
     ViewBag.Title = "My Cart";
 }
-
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mt-3">
+        @TempData["ErrorMessage"]
+    </div>
+}
+@if (Model.HasUnavailableItems)
+{
+    <div class="alert alert-warning alert-dismissible fade show d-flex justify-content-between align-items-center"
+         role="alert">
+        <strong>Notice:</strong> Some items were removed because they are no longer available.
+        <button type="button"
+                class="btn-close btn-close-white ms-3"
+                data-bs-dismiss="alert"
+                aria-label="Close"
+                style="font-size: 1.2rem; opacity: 1;">
+            x
+        </button>
+    </div>
+}
 <div class="container mt-5">
     <h3>@ViewBag.Title</h3>
 
@@ -13,9 +32,11 @@
             Your cart is empty. Add some thing to it
         </div>
         <a href="@Url.Action("Index", "Books")" class="btn btn-primary">Browse Books</a>
+
     }
     else
     {
+
         <table class="table table-bordered mt-3">
             <thead>
                 <tr>
@@ -31,12 +52,14 @@
             <tbody>
                 @foreach (var item in Model.Items)
                 {
+
                     <tr>
-                        <td>@(item.Book.Title ?? "Unknown")</td>
-                        <td>@(item.Book.Author?? "Unknown")</td>
+                        <td>@(item.BookTitle ?? "Unknown")</td>
+                        <td>@(item.BookAuthor ?? "Unknown")</td>
                         <td>@(item.BookEdition.Format)</td>
                         <td>
-                            <form asp-action="UpdateCartItemQuantityAsync" method="post" class="d-inline">
+                            <div class="d-flex align-items-center">
+                            <button class="btn btn-group-sm btn-primary btn-add-quantity">+</button>
                                 <input type="hidden" name="CartItemId" value="@item.Id" />
                                 <input type="number"
                                        name="NewQuantity"
@@ -44,11 +67,11 @@
                                        min="1"
                                        max="@(item.BookEdition?.Inventory?.StockQuantity ?? 1)"
                                        class="form-control d-inline w-50" />
-                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
-                            </form>
+                                <button class="btn btn-group-sm btn-primary btn-minus-quantity">-</button>
+                            </div>
                         </td>
-                        <td>@(item.BookEdition?.Inventory?.SellPrice.ToString("C0") ?? "0")</td>
-                        <td>@((item.Quantity * (item.BookEdition?.Inventory?.SellPrice ?? 0)).ToString("C0"))</td>
+                        <td>@(item.BookEdition?.Inventory?.SellPrice.ToString("C0", new System.Globalization.CultureInfo("vi-VN")) ?? "0")</td>
+                        <td>@((item.Quantity * (item.BookEdition?.Inventory?.SellPrice ?? 0)).ToString("C0", new System.Globalization.CultureInfo("vi-VN")))</td>
                         <td>
                             <form asp-action="RemoveItem" method="post">
                                 <input type="hidden" name="CartItemId" value="@item.Id" />
@@ -59,7 +82,9 @@
                 }
             </tbody>
         </table>
-
+        <div>
+            <h4 id="total-price">Total price: @Model.TotalPrice.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</h4>
+        </div>
         <form asp-action="ClearCart" method="post">
             <input type="hidden" name="userId" value="@Model.UserId" />
             <button type="submit" class="btn btn-warning">Clear Cart</button>
@@ -67,9 +92,6 @@
     }
 </div>
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger mt-3">
-        @TempData["ErrorMessage"]
-    </div>
+@section Scripts {
+    <script src="~/view-resources/Views/Carts/updateQuantity.js?v=@DateTime.Now.Ticks"></script>
 }

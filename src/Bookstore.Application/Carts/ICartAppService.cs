@@ -12,7 +12,7 @@ namespace Bookstore.Carts
         Task<Dto.CartDto> GetCartByUserIdAsync(long userId);
         Task<Dto.CartDto> AddItemToCartAsync(long userId, Dto.AddCartItemDto input);
         Task<Dto.CartDto> RemoveItemFromCartAsync(long userId, Dto.DeleteCartItemDto input);
-        Task<Dto.CartDto> UpdateCartItemQuantityAsync(long userId, Dto.UpdateCartItemDto input);
+        Task<Dto.CartDto> UpdateCartItemQuantityAsync(Dto.UpdateCartItemDto input);
         Task ClearCartAsync(long userId);
     }
 }

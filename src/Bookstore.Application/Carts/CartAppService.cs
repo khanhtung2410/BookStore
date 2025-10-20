@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Abp.UI;
+using Bookstore.Carts.Dto;
 using Bookstore.Entities.Books;
 using Bookstore.Entities.Carts;
 using Microsoft.EntityFrameworkCore;
@@ -29,33 +30,54 @@ namespace Bookstore.Carts
             _bookRepository = bookRepository;
             _bookEditionRepository = bookEditionRepository;
         }
-        public async Task<Dto.CartDto> GetCartByUserIdAsync(long userId)
+        public async Task<CartDto> GetCartByUserIdAsync(long userId)
         {
-            var cartQuery = _cartRepository
+            var cart = await _cartRepository
                 .GetAllIncluding(c => c.Items)
                 .Include(c => c.Items)
                     .ThenInclude(i => i.BookEdition)
                         .ThenInclude(be => be.Inventory)
                 .Include(c => c.Items)
                     .ThenInclude(i => i.BookEdition)
-                        .ThenInclude(be => be.Book);
+                        .ThenInclude(be => be.Book)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
 
-            var cart = await cartQuery.FirstOrDefaultAsync(c => c.UserId == userId);
-            foreach (var item in cart.Items)
-            {
-                Console.WriteLine($"Edition ID: {item.BookEditionId}, Book Title: {item.BookEdition?.Book?.Title}");
-            }
             if (cart == null)
             {
-                return new Dto.CartDto
+                return new CartDto
                 {
                     Id = Guid.NewGuid(),
                     UserId = userId,
-                    Items = new List<Dto.CartItemDto>()
+                    Items = new List<CartItemDto>()
                 };
             }
-            return ObjectMapper.Map<Dto.CartDto>(cart);
+
+            // Filter out editions or books are soft deleted
+            var validItems = cart.Items
+                .Where(i => i.BookEdition != null
+                         && !i.BookEdition.IsDeleted
+                         && i.BookEdition.Book != null
+                         && !i.BookEdition.Book.IsDeleted)
+                .ToList();
+
+            // Optionally auto-remove them from DB if invalid
+            var invalidItems = cart.Items.Except(validItems).ToList();
+            foreach (var bad in invalidItems)
+            {
+                await _cartItemRepository.DeleteAsync(bad);
+            }
+            if (invalidItems.Any())
+                await CurrentUnitOfWork.SaveChangesAsync();
+
+            cart.Items = validItems;
+
+            var dto = ObjectMapper.Map<CartDto>(cart);
+            dto.TotalPrice = cart.Items?
+                .Sum(i => i.Quantity * (i.BookEdition?.Inventory?.SellPrice ?? 0)) ?? 0;
+            dto.HasUnavailableItems = invalidItems.Any();
+            return dto;
         }
+
         public async Task<Dto.CartDto> AddItemToCartAsync(long userId, Dto.AddCartItemDto input)
         {
             if (input.BookId == null && input.BookEditionId == null)
@@ -79,10 +101,10 @@ namespace Bookstore.Carts
                 await CurrentUnitOfWork.SaveChangesAsync();
             }
             // Get book edition iventory
-            var bookEdition = await _bookEditionRepository.GetAllIncluding(be => be.Inventory).FirstOrDefaultAsync(be => be.Id == input.BookEditionId);
-            if (bookEdition == null)
+            var bookEdition = await _bookEditionRepository.GetAllIncluding(be => be.Inventory).IgnoreQueryFilters().FirstOrDefaultAsync(be => be.Id == input.BookEditionId);
+            if (bookEdition == null || bookEdition.IsDeleted)
             {
-                throw new UserFriendlyException("Book edition not found.");
+                throw new UserFriendlyException("Book edition not available.");
             }
 
             // Check if the item already exists in the cart and get its current quantity
@@ -152,8 +174,9 @@ namespace Bookstore.Carts
             await CurrentUnitOfWork.SaveChangesAsync();
             return ObjectMapper.Map<Dto.CartDto>(cart);
         }
-        public async Task<Dto.CartDto> UpdateCartItemQuantityAsync(long userId, Dto.UpdateCartItemDto input)
+        public async Task<Dto.CartDto> UpdateCartItemQuantityAsync(Dto.UpdateCartItemDto input)
         {
+            var userId = (long)AbpSession.UserId.Value;
             var cart = await _cartRepository.GetAllIncluding(c => c.Items).FirstOrDefaultAsync(c => c.UserId == userId);
             var cartItem = cart?.Items.FirstOrDefault(i => i.Id == input.CartItemId);
             if (cart == null)
@@ -177,7 +200,11 @@ namespace Bookstore.Carts
             cartItem.Quantity = input.NewQuantity;
             await _cartItemRepository.UpdateAsync(cartItem);
             await CurrentUnitOfWork.SaveChangesAsync();
-            return ObjectMapper.Map<Dto.CartDto>(cart);
+            var cartDto = ObjectMapper.Map<CartDto>(cart);
+            cartDto.TotalPrice = cart.Items
+                .Sum(i => i.Quantity * (i.BookEdition?.Inventory?.SellPrice ?? 0));
+
+            return cartDto;
         }
     }
 }

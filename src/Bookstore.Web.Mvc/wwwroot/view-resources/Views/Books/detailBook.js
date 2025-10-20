@@ -21,8 +21,14 @@
 
         const inv = edition.Inventory;
         stockText.textContent = inv ? inv.StockQuantity : "N/A";
-        buyPriceText.textContent = inv ? inv.BuyPrice.toFixed(2) : "N/A";
-        sellPriceText.textContent = inv ? inv.SellPrice.toFixed(2) : "N/A";
+        buyPriceText.textContent = inv
+            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(inv.BuyPrice)
+            : "N/A";
+
+        sellPriceText.textContent = inv
+            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(inv.SellPrice)
+            : "N/A";
+
 
        
         addToCartInput.value = edition.Id;

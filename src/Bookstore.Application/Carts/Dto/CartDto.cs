@@ -11,6 +11,8 @@ namespace Bookstore.Carts.Dto
         public Guid Id { get; set; }
         public long UserId { get; set; }
         public List<CartItemDto> Items { get; set; } = new();
+        public decimal TotalPrice { get; set; }
+        public bool HasUnavailableItems { get; set; }
     }
     public class CartItemDto
     {
