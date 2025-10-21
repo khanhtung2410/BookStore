@@ -1,0 +1,20 @@
+﻿<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="importModalLabel">Import Book</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm" method="post" enctype="multipart/form-data" action="/Books/ImportExcel">
+                    <div class="mb-3">
+                        <label for="ExcelFile" class="form-label">Select Excel File</label>
+                        <input type="file" class="form-control" id="ExcelFile" name="ExcelFile" required>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="getFormatExcel">Get Excel Template</button>
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

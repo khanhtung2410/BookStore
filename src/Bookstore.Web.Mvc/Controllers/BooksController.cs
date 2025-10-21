@@ -23,24 +23,30 @@ namespace Bookstore.Web.Controllers
 
         public async Task<ActionResult> Index(int page = 1)
         {
-            var books = await _bookAppService.GetAllBooks() ?? new List<ListBookDto>();
+            // Call the service
+            var booksResult = await _bookAppService.GetAllBooks();
+
+            // Extract the list of items
+            var books = booksResult?.Items ?? new List<ListBookDto>();
 
             var booksPerPage = 10;
             var pagedBooks = books
                 .Skip((page - 1) * booksPerPage)
                 .Take(booksPerPage)
                 .ToList();
+
             var model = new Models.Books.BookListViewModel
             {
                 Books = pagedBooks,
                 CurrentPage = page,
                 TotalPages = (books != null)
-            ? (int)Math.Ceiling(books.Count / 10.0)
-            : 0
+                    ? (int)Math.Ceiling(books.Count / (double)booksPerPage)
+                    : 0
             };
 
             return View(model);
         }
+
 
         public async Task<ActionResult> Detail(int id)
         {

@@ -12,7 +12,8 @@ namespace Bookstore.Books.Dto
     {
         public BookMapProfile()
         {
-            CreateMap<Book, ListBookDto>();
+            CreateMap<Book, ListBookDto>()
+                 .ForMember(dest => dest.Genre, opt => opt.MapFrom(src => src.Genre.ToString()));
             CreateMap<BookEdition, BookEditionDto>()
                 .ForMember(dest => dest.Inventory, opt => opt.MapFrom(src => src.Inventory));
             CreateMap<Book, BookDto>()

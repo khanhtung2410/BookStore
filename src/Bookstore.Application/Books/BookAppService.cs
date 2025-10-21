@@ -1,4 +1,5 @@
 ﻿using Abp.Application.Services;
+using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Abp.UI;
 using Bookstore.Books.Dto;
@@ -64,12 +65,35 @@ namespace Bookstore.Books
             await _bookRepository.DeleteAsync(input.Id);
         }
 
-        public async Task<List<ListBookDto>> GetAllBooks()
+        public async Task<PagedResultDto<ListBookDto>> GetAllBooks(GetAllBooksInput input =null)
         {
-            var books = await _bookRepository.GetAllListAsync();
-            return ObjectMapper.Map<List<ListBookDto>>(books);
-        }
+            input ??= new GetAllBooksInput();
 
+            var query = _bookRepository.GetAll();
+
+            if (!string.IsNullOrWhiteSpace(input.Keyword))
+            {
+                query = query.Where(b => b.Title.Contains(input.Keyword) || b.Author.Contains(input.Keyword));
+            }
+
+            if (input.Genre.HasValue)
+            {
+                query = query.Where(b => b.Genre == input.Genre.Value);
+            }
+
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(b => b.Title)
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount)
+                .ToListAsync();
+
+            var mapped = ObjectMapper.Map<List<ListBookDto>>(items);
+
+            return new PagedResultDto<ListBookDto>(totalCount, mapped);
+        }
         public async Task<BookDto> GetBook(int id)
         {
             var book = await _bookRepository.GetAllIncluding(b => b.Editions).FirstOrDefaultAsync(b => b.Id == id);

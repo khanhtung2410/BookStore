@@ -1,4 +1,5 @@
 ﻿using Abp.Application.Services;
+using Abp.Application.Services.Dto;
 using AutoMapper.Internal.Mappers;
 using Bookstore.Books.Dto;
 using Bookstore.Entities;
@@ -15,14 +16,13 @@ namespace Bookstore.Books
         Task<int> CreateBook(CreateBookDto input);
         Task UpdateBook(UpdateBookDto input);
         Task DeleteBook(DeleteBookDto input);
-        Task<List<ListBookDto>> GetAllBooks();
+        Task<PagedResultDto<ListBookDto>> GetAllBooks(GetAllBooksInput input = null);
         Task<BookDto> GetBook(int id);
         Task<BookDto> GetBookEditionByIdAsync(int bookId, int bookEditionId);
     }
     public interface IBookImportAppService : IApplicationService
     {
         Task ImportBooksFromExcel(byte[] fileBytes);
-        Task ImportBookHandle(UpdateBookDto input);
 
     }
 

@@ -27,10 +27,6 @@ namespace Bookstore.Books
             _bookEditionRepository = bookEditionRepository;
         }
 
-        public Task ImportBookHandle(UpdateBookDto input)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task ImportBooksFromExcel(byte[] fileBytes)
         {
