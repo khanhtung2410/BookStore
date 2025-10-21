@@ -1,0 +1,23 @@
+﻿@using Bookstore.Web.Models.Common.Modals
+@{
+    Layout = null;
+}
+<div class="modal fade" id="BooksImportModal" tabindex="-1" role="dialog" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            @await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(L("ImportBook")))
+            <form id="importForm" method="post" enctype="multipart/form-data" role="form" action="/Books/ImportExcel">
+                <div class="mb-3">
+                    <label for="ExcelFile" class="form-label">Select Excel File</label>
+                    <input type="file" class="form-control" id="ExcelFile" name="ExcelFile" required>
+                </div>
+                <button type="button" class="btn btn-secondary" id="getFormatExcel">Get Excel Template</button>
+                <button type="submit" class="btn btn-primary">Import</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/view-resources/Views/Books/_ImportModal.js?v=@DateTime.Now.Ticks"></script>
+}

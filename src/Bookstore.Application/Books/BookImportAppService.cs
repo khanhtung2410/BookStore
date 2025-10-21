@@ -4,6 +4,7 @@ using Abp.UI.Inputs;
 using Bookstore.Books.Dto;
 using Bookstore.Entities.Books;
 using OfficeOpenXml;
+using OfficeOpenXml.DataValidation;
 using System;
 using System.IO;
 using System.Linq;
@@ -27,6 +28,75 @@ namespace Bookstore.Books
             _bookEditionRepository = bookEditionRepository;
         }
 
+        public async Task<byte[]> DownloadImportTemplateAsync()
+        {
+            ExcelPackage.License.SetNonCommercialPersonal("Jhon");
+
+            using var package = new ExcelPackage();
+            var sheet = package.Workbook.Worksheets.Add("Books");
+
+            // Headers
+            string[] headers = {
+            "Title", "Author", "Genre", "Description", "Format",
+            "Publisher", "PublishedDate (dd-MM-yyyy)", "ISBN",
+            "BuyPrice (VND)", "SellPrice", "StockQuantity", "Expenditure (VND)"
+        };
+
+            for (int col = 1; col <= headers.Length; col++)
+            {
+                sheet.Cells[1, col].Value = headers[col - 1];
+                sheet.Cells[1, col].Style.Font.Bold = true;
+            }
+
+            // Table for 1000 rows
+            var tblRange = sheet.Cells[1, 1, 1000, headers.Length];
+            var table = sheet.Tables.Add(tblRange, "BookTable");
+            table.ShowHeader = true;
+
+            // Column formatting
+            sheet.Column(1).Style.Numberformat.Format = "@"; // Title
+            sheet.Column(2).Style.Numberformat.Format = "@"; // Author
+            sheet.Column(3).Style.Numberformat.Format = "@"; // Genre
+            sheet.Column(4).Style.Numberformat.Format = "@"; // Description
+            sheet.Column(5).Style.Numberformat.Format = "@"; // Format
+            sheet.Column(6).Style.Numberformat.Format = "@"; // Publisher
+            sheet.Column(7).Style.Numberformat.Format = "dd-MM-yyyy"; // PublishedDate
+            sheet.Column(8).Style.Numberformat.Format = "@"; // ISBN
+            sheet.Column(9).Style.Numberformat.Format = "#,##0.00"; // BuyPrice
+            sheet.Column(10).Style.Numberformat.Format = "#,##0.00"; // SellPrice
+            sheet.Column(11).Style.Numberformat.Format = "0";        // StockQuantity
+            sheet.Column(12).Style.Numberformat.Format = "#,##0.00"; // Expenditure
+
+            // Format validation
+            var formatValidation = sheet.DataValidations.AddListValidation("E2:E1000");
+            formatValidation.Formula.Values.Add("Paperback");
+            formatValidation.Formula.Values.Add("Hardcover");
+            formatValidation.ErrorTitle = "Invalid Format";
+            formatValidation.Error = "Please select a valid book format.";
+            formatValidation.ErrorStyle = ExcelDataValidationWarningStyle.stop;
+
+            // Genre validation
+            var genres = new[] {
+            "Fiction","NonFiction","Mystery","Thriller","Romance","Fantasy",
+            "ScienceFiction","Biography","History","Adventure","Children",
+            "SelfHelp","Classic","Travel","Cooking","Horror","GraphicNovel"
+        };
+            var genreValidation = sheet.DataValidations.AddListValidation("C2:C1000");
+            foreach (var g in genres) genreValidation.Formula.Values.Add(g);
+            genreValidation.ErrorTitle = "Invalid Genre";
+            genreValidation.Error = "Please select a valid book genre.";
+            genreValidation.ErrorStyle = ExcelDataValidationWarningStyle.stop;
+
+            // Expenditure formula
+            for (int row = 2; row <= 1000; row++)
+            {
+                sheet.Cells[row, 12].Formula = $"IF(AND(ISNUMBER(I{row}),ISNUMBER(K{row})),I{row}*K{row},0)";
+            }
+
+            sheet.Cells.AutoFitColumns();
+
+            return package.GetAsByteArray();
+        }
 
         public async Task ImportBooksFromExcel(byte[] fileBytes)
         {

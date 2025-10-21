@@ -58,6 +58,9 @@
                         `   <button type="button" class="btn btn-sm bg-secondary edit-book" data-book-id="${row.id}" data-toggle="modal" data-target="#BookEditModal">`,
                         `       <i class="fas fa-pencil-alt"></i> ${l('Edit')}`,
                         '   </button>',
+                        `   <button type="button" class="btn btn-sm bg-danger delete-book" data-book-id="${row.id}" data-book-title="${row.title}">`,
+                        `       <i class="fas fa-trash"></i> ${l('Delete')}`,
+                        '   </button>'
                     ].join('');
                 }
             }
@@ -69,6 +72,32 @@
         _$form.clearForm();
     });
 
+    //Delete book
+    $(document).on('click', '.delete-book', function () {
+        var bookId = $(this).attr('data-book-id');
+        var bookTitle = $(this).attr('data-book-title');
+        deleteBook(bookId, bookTitle);
+    })
+    function deleteBook(bookId, bookTitle) {
+        abp.message.confirm(
+            abp.utils.formatString(
+                l('AreYouSureWantToDelete'),
+                bookTitle
+            ),
+            null,
+            (isConfirmed) => {
+                if (isConfirmed) {
+                    _bookService.deleteBook({
+                        id: bookId
+                    }).done(() => {
+                        abp.notify.info(l('SuccessfullyDeleted'));
+                        _$booksTable.ajax.reload();
+                    });
+                }
+            }
+        );
+    }
+    //Search
     $('.btn-search').on('click', (e) => {
         _$booksTable.ajax.reload();
     });
@@ -85,4 +114,8 @@
             return false;
         }
     });
+    //Import
+    //$(document).on('click', '.btn-import-books', function (e) {
+    //)
+    //}
 })(jQuery)
