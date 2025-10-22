@@ -55,7 +55,7 @@
                 defaultContent: '',
                 render: (data, type, row, meta) => {
                     return [
-                        `   <button type="button" class="btn btn-sm bg-secondary edit-book" data-book-id="${row.id}" data-toggle="modal" data-target="#BookUpdateModal">`,
+                        `   <button type="button" class="btn btn-sm bg-secondary edit-book" data-book-id="${row.id}" data-bs-toggle="modal" data-bs-target="#BookUpdateModal">`,
                         `       <i class="fas fa-pencil-alt"></i> ${l('Edit')}`,
                         '   </button>',
                         `   <button type="button" class="btn btn-sm bg-danger delete-book" data-book-id="${row.id}" data-book-title="${row.title}">`,
@@ -199,6 +199,10 @@
             $('#BookUpdateModal select[name="Genre"]').html('<option value="">Failed to load genres</option>');
         }
     }
+
+    abp.event.on('book.edited', (data) => {
+        _$booksTable.ajax.reload();
+    })
 
     //Import
     //$(document).on('click', '.btn-import-books', function (e) {

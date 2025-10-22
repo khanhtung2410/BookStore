@@ -1,15 +1,15 @@
-﻿using Abp.AutoMapper;
-using Bookstore.Entities.Books;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿    using Abp.AutoMapper;
+    using Bookstore.Entities.Books;
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
 
-namespace Bookstore.Books.Dto
-{
-    public class UpdateBookEditionDto
+    namespace Bookstore.Books.Dto
+    {
+    public class UpdateBookEditionDto : IValidatableObject
     {
         public int Id { get; set; }
         [Required]
@@ -22,54 +22,63 @@ namespace Bookstore.Books.Dto
         [Required]
         public DateTime? PublishedDate { get; set; }
         [Required]
-        [StringLength(50)]
+        [StringLength(13)]
         public string ISBN { get; set; }
-
-        [Required]
-        public CreateBookInventoryDto Inventory { get; set; } 
-    }
-
-    [AutoMapTo(typeof(Book))]
-    public class UpdateBookDto : IValidatableObject
-    {
-        [Required]
-        public int Id { get; set; }
-
-        [Required(ErrorMessage = "Title is required.")]
-        [StringLength(BookConsts.MaxTitleLength)]
-        public string Title { get; set; }
-
-        [Required(ErrorMessage = "Author is required.")]
-        [StringLength(BookConsts.MaxAuthorLength)]
-        public string Author { get; set; }
-
-        [Required(ErrorMessage = "Genre is required.")]
-        public BookConsts.Genre Genre { get; set; }
-
-        [Required(ErrorMessage = "Description is required.")]
-        [StringLength(BookConsts.MaxDescriptionLength)]
-        public string Description { get; set; }
-
-        [Required]
-        public List<UpdateBookEditionDto> Editions { get; set; } = new List<UpdateBookEditionDto>();
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (!Enum.IsDefined(typeof(BookConsts.Genre), Genre))
+            if (PublishedDate > DateTime.Now.AddYears(1))
             {
-                yield return new ValidationResult("Genre is required and must be a valid value.", new[] { nameof(Genre) });
+                yield return new ValidationResult("Publish date can't exceed 1 year from now", new[] { nameof(PublishedDate) });
             }
-            if (Editions == null || Editions.Count == 0)
+            if (ISBN.Length != 13 && ISBN.Length != 10)
             {
-                yield return new ValidationResult("At least one edition is required.", new[] { nameof(Editions) });
+                yield return new ValidationResult("ISBN have to be 13 or 10 char in length", new[] { nameof(ISBN) });
             }
-            foreach (var edition in Editions)
+            if (!ISBN.All(char.IsDigit))
             {
-                if (edition.Inventory == null)
+                yield return new ValidationResult(
+                    "ISBN can only contain numeric characters",
+                    new[] { nameof(ISBN) }
+                );
+            }
+        }
+    }
+       
+        [AutoMapTo(typeof(Book))]
+        public class UpdateBookDto : IValidatableObject
+        {
+            [Required]
+            public int Id { get; set; }
+
+            [Required(ErrorMessage = "Title is required.")]
+            [StringLength(BookConsts.MaxTitleLength)]
+            public string Title { get; set; }
+
+            [Required(ErrorMessage = "Author is required.")]
+            [StringLength(BookConsts.MaxAuthorLength)]
+            public string Author { get; set; }
+
+            [Required(ErrorMessage = "Genre is required.")]
+            public BookConsts.Genre Genre { get; set; }
+
+            [Required(ErrorMessage = "Description is required.")]
+            [StringLength(BookConsts.MaxDescriptionLength)]
+            public string Description { get; set; }
+
+            [Required]
+            public List<UpdateBookEditionDto> Editions { get; set; } = new List<UpdateBookEditionDto>();
+
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                if (!Enum.IsDefined(typeof(BookConsts.Genre), Genre))
                 {
-                    yield return new ValidationResult("Inventory is required for each edition.", new[] { nameof(Editions) });
+                    yield return new ValidationResult("Genre is required and must be a valid value.", new[] { nameof(Genre) });
+                }
+                if (Editions == null || Editions.Count == 0)
+                {
+                    yield return new ValidationResult("At least one edition is required.", new[] { nameof(Editions) });
                 }
             }
         }
     }
-}
