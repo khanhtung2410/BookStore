@@ -19,8 +19,8 @@
             x
         </button>
     </div>
-} *@
-@* <div class="container mt-5">
+}
+<div class="container mt-5">
     <h1 class="mb-4">Books</h1>
     <button class="btn btn-primary mb-4 btn-import">Import Book</button>
     <a href="@Url.Action("Index", "Carts")" class="btn btn-primary mb-4 btn-view-cart">
@@ -187,10 +187,11 @@
 </section>
 
 @await Html.PartialAsync("~/Views/Books/_ImportModal.cshtml")
+@await Html.PartialAsync("~/Views/Books/_UpdateModal.cshtml", new Bookstore.Web.Models.Books.BookUpdateViewModel())
 
 @section Scripts {
-    @* <script src="~/view-resources/Views/Books/deleteBook.js?v=@DateTime.Now.Ticks"></script>
-    <script src="~/view-resources/Views/Books/importBook.js?v=@DateTime.Now.Ticks"></script> *@
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script src="~/view-resources/Views/Books/index.js?v=@DateTime.Now.Ticks"></script>
     <script src="~/view-resources/Views/Books/_ImportModal.js?v=@DateTime.Now.Ticks"></script>
 

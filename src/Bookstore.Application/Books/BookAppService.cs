@@ -180,7 +180,7 @@ namespace Bookstore.Books
             return bookDto;
         }
 
-        [Abp.Authorization.AbpAuthorize("Pages.Books.Update")]
+        [Abp.Authorization.AbpAuthorize("Pages.Books.Update")]  
         public async Task UpdateBook(UpdateBookDto input)
         {
             var book = await _bookRepository
@@ -299,7 +299,15 @@ namespace Bookstore.Books
             await _bookRepository.UpdateAsync(book);
             await CurrentUnitOfWork.SaveChangesAsync();
         }
-
-
+        public async Task<List<SelectListItemDto>> GetBookGenreAsync()
+        {
+            return Enum.GetValues(typeof(BookConsts.Genre))
+           .Cast<BookConsts.Genre>()
+           .Select(g => new SelectListItemDto
+           {
+               Value = ((int)g).ToString(),
+               Text = g.ToString()
+           }).ToList();
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿$(function () {
+﻿(function ($) {
     var l = abp.localization.getSource('Bookstore'),
         _$importModal = $('#BooksImportModal'),
         _$importForm = $('#importForm');

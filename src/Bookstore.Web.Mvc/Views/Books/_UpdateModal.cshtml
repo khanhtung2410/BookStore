@@ -1,0 +1,123 @@
+﻿@using Bookstore.Entities.Books
+@using Bookstore.Web.Models.Books
+@using Bookstore.Web.Models.Common.Modals
+@model BookUpdateViewModel
+@{
+    Layout = null;
+}
+<div class="modal fade" id="BookUpdateModal" tabindex="-1" aria-labelledby="BookUpdateModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            @await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(L("UpdateBook")))
+
+            <form name="BookUpdateForm" role="form" class="form-horizontal">
+                <input type="hidden" name="Id" value="@Model.Id" />
+
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" id="book-tab" data-bs-toggle="tab" data-bs-target="#update-book-details" type="button" role="tab">@L("BookDetails")</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="edition-tab" data-bs-toggle="tab" data-bs-target="#update-edition-details" type="button" role="tab">@L("EditionDetails")</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content mt-3">
+                        <!-- Book Details -->
+                        <div class="tab-pane fade show active" id="update-book-details" role="tabpanel" aria-labelledby="book-tab">
+                            <div class="mb-3 row">
+                                <label class="col-md-3 col-form-label fw-bold required">@L("Title")</label>
+                                <div class="col-md-9">
+                                    <input id="title" class="form-control" type="text" name="Title"
+                                           value="@Model.Title" required maxlength="200" placeholder="@L("EnterTitle")">
+                                </div>
+                            </div>
+
+                            <div class="mb-3 row">
+                                <label class="col-md-3 col-form-label fw-bold required">@L("Author")</label>
+                                <div class="col-md-9">
+                                    <input id="author" class="form-control" type="text" name="Author"
+                                           value="@Model.Author" required maxlength="50" placeholder="@L("EnterAuthor")">
+                                </div>
+                            </div>
+
+                            <div class="mb-3 row">
+                                <label class="col-md-3 col-form-label fw-bold required">@L("Genre")</label>
+                                <div class="col-md-9">
+                                    <select id="genre" class="form-select" name="Genre" required>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 row">
+                                <label class="col-md-3 col-form-label fw-bold">@L("Description")</label>
+                                <div class="col-md-9">
+                                    <textarea id="description" class="form-control" name="Description" rows="3"
+                                              placeholder="@L("EnterDescription")">@Model.Description</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Edition Details -->
+                        <div class="tab-pane fade" id="update-edition-details" role="tabpanel" aria-labelledby="edition-tab">
+                            <div class="mb-3 row">
+                                <label class="col-md-3 col-form-label fw-bold required">@L("SelectEdition")</label>
+                                <div class="col-md-9">
+                                    <select id="selectEdition" class="form-select" name="SelectedEditionId" required>
+                                        <option value="">-- Select an edition --</option>
+                                        @foreach (var ed in Model.Editions)
+                                        {
+                                            <option value="@ed.Id"
+                                                    data-format="@ed.Format.ToString()"
+                                                    data-isbn="@ed.ISBN"
+                                                    data-publisher="@ed.Publisher"
+                                                    data-publisheddate="@ed.PublishedDate.ToString("yyyy-MM-dd")">
+                                                @ed.Format.ToString() - @ed.ISBN
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="editionFields" class="mt-3">
+                                <div class="mb-3 row">
+                                    <label class="col-md-3 col-form-label fw-bold">@L("Format")</label>
+                                    <div class="col-md-9">
+                                        <select id="format" class="form-select" name="Format">
+                                            <option value="Hardcover">Hardcover</option>
+                                            <option value="Paperback">Paperback</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 row">
+                                    <label class="col-md-3 col-form-label fw-bold">@L("ISBN")</label>
+                                    <div class="col-md-9">
+                                        <input id="isbn" type="text" name="ISBN" class="form-control" />
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 row">
+                                    <label class="col-md-3 col-form-label fw-bold">@L("Publisher")</label>
+                                    <div class="col-md-9">
+                                        <input id="publisher" type="text" name="Publisher" class="form-control" />
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 row">
+                                    <label class="col-md-3 col-form-label fw-bold">@L("PublishedDate")</label>
+                                    <div class="col-md-9">
+                                        <input id="publishedDate" type="date" name="PublishedDate" class="form-control" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+            </form>
+        </div>
+    </div>
+</div>

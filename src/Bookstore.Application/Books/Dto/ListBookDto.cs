@@ -20,4 +20,9 @@ namespace Bookstore.Books.Dto
         public BookConsts.Genre? Genre { get; set; }
         public string Keyword { get; set; }
     }
+    public class SelectListItemDto
+    {
+        public string Value { get; set; }
+        public string Text { get; set; }
+    }
 }
