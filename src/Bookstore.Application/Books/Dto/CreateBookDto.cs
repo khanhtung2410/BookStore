@@ -62,6 +62,7 @@ namespace Bookstore.Books.Dto
 
         [Required]
         public List<CreateBookEditionDto> Editions { get; set; } = new List<CreateBookEditionDto>();
+        public List<BookImageDto>? Images { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

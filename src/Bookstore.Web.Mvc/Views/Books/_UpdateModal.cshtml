@@ -45,7 +45,7 @@
                             <div class="mb-3 row">
                                 <label class="col-md-3 col-form-label fw-bold required">@L("Genre")</label>
                                 <div class="col-md-9">
-                                    <select id="genre" class="form-select" name="Genre" required>
+                                    <select id="genre" class="form-select form-control" name="Genre" required>
                                     </select>
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                             <div class="mb-3 row">
                                 <label class="col-md-3 col-form-label fw-bold required">@L("SelectEdition")</label>
                                 <div class="col-md-9">
-                                    <select id="selectEdition" class="form-select" name="SelectedEditionId" required>
+                                    <select id="selectEdition" class="form-select form-control" name="SelectedEditionId" required>
                                         <option value="">-- Select an edition --</option>
                                         @foreach (var ed in Model.Editions)
                                         {
@@ -84,7 +84,7 @@
                                 <div class="mb-3 row">
                                     <label class="col-md-3 col-form-label fw-bold">@L("Format")</label>
                                     <div class="col-md-9">
-                                        <select id="format" class="form-select" name="Format">
+                                        <select id="format" class="form-select form-control" name="Format">
                                             <option value="Hardcover">Hardcover</option>
                                             <option value="Paperback">Paperback</option>
                                         </select>

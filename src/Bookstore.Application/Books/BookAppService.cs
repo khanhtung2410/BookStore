@@ -4,9 +4,14 @@ using Abp.Domain.Repositories;
 using Abp.UI;
 using Bookstore.Books.Dto;
 using Bookstore.Entities.Books;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,12 +22,19 @@ namespace Bookstore.Books
         private readonly IRepository<Book, int> _bookRepository;
         private readonly IRepository<BookInventory, int> _bookInventoryRepository;
         private readonly IRepository<BookEdition, int> _bookEditionRepository;
+        private readonly IRepository<BookImage, int> _bookImageRepository;
+        private readonly IWebHostEnvironment _env;
 
-        public BookAppService(IRepository<Book, int> bookRepository, IRepository<BookInventory, int> bookInventoryRepository, IRepository<BookEdition, int> bookEditionRepository)
+        public BookAppService(
+            IRepository<Book, int> bookRepository, IRepository<BookInventory, int> bookInventoryRepository
+            , IRepository<BookEdition, int> bookEditionRepository, IRepository<BookImage, int> bookImageRepository,
+            IWebHostEnvironment env)
         {
             _bookRepository = bookRepository;
             _bookInventoryRepository = bookInventoryRepository;
             _bookEditionRepository = bookEditionRepository;
+            _bookImageRepository = bookImageRepository;
+            _env = env;
         }
         [Abp.Authorization.AbpAuthorize("Pages.Books.Create")]
         public async Task<int> CreateBook(CreateBookDto input)
@@ -57,7 +69,7 @@ namespace Bookstore.Books
                 {
                     throw new UserFriendlyException($"The ISBN '{editionDto.ISBN}' already exists for another book edition.");
                 }
-                if(editionDto.PublishedDate > DateTime.Now.AddYears(1))
+                if (editionDto.PublishedDate > DateTime.Now.AddYears(1))
                 {
                     throw new UserFriendlyException("$The Published Date cannot be more than one year from now");
                 }
@@ -314,5 +326,60 @@ namespace Bookstore.Books
                Text = g.ToString()
            }).ToList();
         }
+        public async Task<List<BookImageDto>> UploadBookImagesAsync([FromForm] int bookId, [FromForm] List<IFormFile> files, [FromForm] bool isCover = false)
+        {
+            var book = await _bookRepository.FirstOrDefaultAsync(bookId);
+            if (book == null)
+                throw new UserFriendlyException("Book not found");
+
+            if (files == null || !files.Any())
+                throw new UserFriendlyException("No files provided");
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var uploadPath = Path.Combine(_env.WebRootPath, "uploads", "books", bookId.ToString());
+            Directory.CreateDirectory(uploadPath);
+
+            var uploadedImages = new List<BookImageDto>();
+            int displayOrder = 0;
+
+            foreach (var file in files)
+            {
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension))
+                    throw new UserFriendlyException($"Invalid image format for '{file.FileName}'. Allowed: JPG, JPEG, PNG, WEBP.");
+                if (!file.ContentType.StartsWith("image/"))
+                    throw new UserFriendlyException("Invalid image file type.");
+
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var relativePath = $"/uploads/books/{bookId}/{fileName}";
+                var caption = $"{book.Title}_{displayOrder + 1}";
+
+                // Save to DB
+                var bookImage = new BookImage(bookId, relativePath, caption, displayOrder: displayOrder, isCover: displayOrder == 0);
+                await _bookImageRepository.InsertAsync(bookImage);
+
+                uploadedImages.Add(new BookImageDto
+                {
+                    BookId = bookId,
+                    ImagePath = relativePath,
+                    Caption = caption,
+                    DisplayOrder = displayOrder,
+                    IsCover = displayOrder == 0
+                });
+
+                displayOrder++;
+            }
+
+            await CurrentUnitOfWork.SaveChangesAsync();
+            return uploadedImages;
+        }
+
     }
 }

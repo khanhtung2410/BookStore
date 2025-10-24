@@ -175,8 +175,8 @@
         _$booksTable.ajax.reload();
     })
 
-    //Create
-    _$form.find('.save-button').click(function (e) {
+    // Create
+    _$form.find('.save-button').click(async function (e) {
         e.preventDefault();
 
         if (!_$form.valid()) {
@@ -184,12 +184,12 @@
         }
 
         var book = _$form.serializeFormToObject();
-        book.Genre = parseInt(book.Genre)
+        book.Genre = parseInt(book.Genre);
 
-        delete book.Format
-        delete book.ISBN
-        delete book.PublishedDate
-        delete book.Publisher
+        delete book.Format;
+        delete book.ISBN;
+        delete book.PublishedDate;
+        delete book.Publisher;
 
         book.Editions = [];
         $('#editionsContainer .edition-item').each(function () {
@@ -204,18 +204,45 @@
 
         abp.ui.setBusy(_$modal);
 
-        _bookService
-            .createBook(book)
-            .done(function () {
-                _$modal.modal('hide');
-                _$form[0].reset();
-                abp.notify.info(l('SavedSuccessfully'));
-                _$booksTable.ajax.reload();
-            })
-            .always(function () {
-                abp.ui.clearBusy(_$modal);
-            });
+        try {
+            const bookId = await _bookService.createBook(book);
+
+            if (selectedFiles.length > 0) {
+                try {
+                    const formData = new FormData();
+                    selectedFiles.forEach(f => formData.append('files', f));
+                    formData.append('bookId', bookId);
+
+                    await $.ajax({
+                        url: '/api/services/app/Book/UploadBookImages',
+                        type: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false
+                    });
+                } catch (imgError) {
+                    console.error(imgError);
+                    abp.notify.warn(
+                        "Book saved, but image upload failed. You can try uploading images again."
+                    );
+                }
+            }
+
+            abp.notify.info(l('SavedSuccessfully'));
+            _$modal.modal('hide');
+            _$form[0].reset();
+            selectedFiles = [];
+            $('#imagePreview').empty();
+            _$booksTable.ajax.reload();
+
+        } catch (error) {
+            console.error(error);
+            abp.notify.error(error.message || 'Error saving book');
+        } finally {
+            abp.ui.clearBusy(_$modal);
+        }
     });
+
 
     // Add new edition block
     $('#btnAddEdition').on('click', function () {
@@ -224,7 +251,7 @@
             <div class="row">
                 <div class="col-md-3">
                     <label class="fw-bold">${l('Format')}</label>
-                    <select name="Format" class="form-select">
+                    <select name="Format" class="form-select form-control">
                         <option value="0">Hardcover</option>
                         <option value="1">Paperback</option>
                     </select>
@@ -254,10 +281,61 @@
         $(this).closest('.edition-item').remove();
     });
 
+    // Image preview
+    const MAX_FILES = 10;
+    let selectedFiles = [];
+    function updateInputFiles() {
+        const dataTransfer = new DataTransfer();
+        selectedFiles.forEach(f => dataTransfer.items.add(f));
+        $('#bookImages')[0].files = dataTransfer.files;
+    }
+
+    $('#bookImages').on('change', function () {
+        const files = Array.from(this.files);
+
+        if (files.length > MAX_FILES) {
+            abp.notify.error(`You can upload a maximum of ${MAX_FILES} images.`);
+            $(this).val('');
+            selectedFiles = [];
+            $('#imagePreview').empty();
+            return;
+        }
+
+        selectedFiles = files;
+        $('#imagePreview').empty();
+
+        $.each(files, function (i, file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                // Bootstrap 4 col-6 (2 per row)
+                const $col = $(`
+                    <div class="col-6 mb-3">
+                        <div class="card">
+                            <img src="${e.target.result}" class="card-img-top" style="height:150px; object-fit:cover;" />
+                            <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                                <span class="small text-truncate" style="max-width: 120px;">${file.name}</span>
+                                <button type="button" class="btn btn-sm btn-danger ml-auto">×</button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                $col.find('button').on('click', function () {
+                    const index = selectedFiles.indexOf(file);
+                    if (index > -1) selectedFiles.splice(index, 1);
+                    $col.remove();
+                    updateInputFiles();
+                });
+
+                $('#imagePreview').append($col);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
 
     async function loadGenres(modalSelector, selectedGenre) {
         try {
-            const genres = await abp.services.app.book.getBookGenre();
+            const genres = await _bookService.getBookGenre();
 
             const $genreSelect = $(`${modalSelector} select[name="Genre"]`);
             $genreSelect.empty(); // clear old options

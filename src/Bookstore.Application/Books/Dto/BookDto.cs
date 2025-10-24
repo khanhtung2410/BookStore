@@ -24,6 +24,8 @@ namespace Bookstore.Books.Dto
         [StringLength(BookConsts.MaxDescriptionLength, ErrorMessage = "Description can't be too long")]
         public string Description { get; set; }
         public List<BookEditionDto> Editions { get; set; } = new();
+        public List<BookImageDto>? Images { get; set; } = new();
+
     }
     public class BookEditionDto {
         [Required]
