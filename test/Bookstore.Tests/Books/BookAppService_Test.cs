@@ -1,493 +1,248 @@
-﻿//using Abp.Runtime.Validation;
-//using Bookstore.Books;
-//using Bookstore.Books.Dto;
-//using Bookstore.Entities.Books;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
-//using Xunit;
+﻿using Abp.UI;
+using Bookstore.Books;
+using Bookstore.Books.Dto;
+using Bookstore.Entities.Books;
+using Shouldly;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Xunit;
 
-//namespace Bookstore.Tests.Books
-//{
-//    public class BookAppService_Test : BookstoreTestBase
-//    {
-//        private readonly IBookAppService _bookAppService;
-//        public BookAppService_Test()
-//        {
-//            _bookAppService = Resolve<IBookAppService>();
-//        }
+namespace Bookstore.Tests.Books
+{
+    public class BookAppService_Tests : BookstoreTestBase
+    {
+        private readonly IBookAppService _bookAppService;
 
-//        [Fact]
-//        public async Task GetAllBooks_Test()
-//        {
-//            await UsingDbContextAsync(async context =>
-//            {
-//                context.Books.RemoveRange(context.Books);
-//                context.BookEditions.RemoveRange(context.BookEditions);
-//                context.BookInventories.RemoveRange(context.BookInventories);
-//                await context.SaveChangesAsync();
-//            });
+        public BookAppService_Tests()
+        {
+            _bookAppService = Resolve<IBookAppService>();
+        }
 
-//            var input1 = new CreateBookDto
-//            {
-//                Title = "Book One",
-//                Author = "Author One",
-//                Genre = BookConsts.Genre.Fiction,
-//                Description = "Description One",
-//                Editions = new List<CreateBookEditionDto>
-//                {
-//                    new CreateBookEditionDto
-//                    {
-//                        Format = BookConsts.Format.Hardcover,
-//                        Publisher = "Publisher One",
-//                        PublishedDate = DateTime.Now,
-//                        ISBN = "1111111111111",
-//                        Inventory = new CreateBookInventoryDto
-//                        {
-//                            BuyPrice = 10.0m,
-//                            SellPrice = 15.0m,
-//                            StockQuantity = 5
-//                        }
-//                    }
-//                }
-//            };
-//            var input2 = new CreateBookDto
-//            {
-//                Title = "Book Two",
-//                Author = "Author Two",
-//                Genre = BookConsts.Genre.NonFiction,
-//                Description = "Description Two",
-//                Editions = new List<CreateBookEditionDto>
-//                {
-//                    new CreateBookEditionDto
-//                    {
-//                        Format = BookConsts.Format.Paperback,
-//                        Publisher = "Publisher Two",
-//                        PublishedDate = DateTime.Now,
-//                        ISBN = "2222222222222",
-//                        Inventory = new CreateBookInventoryDto
-//                        {
-//                            BuyPrice = 12.0m,
-//                            SellPrice = 18.0m,
-//                            StockQuantity = 10
-//                        }
-//                    }
-//                }
-//            };
+        [Fact]
+        public async Task Should_Create_Book_With_Valid_Data()
+        {
+            // Arrange
+            var input = new CreateBookDto
+            {
+                Title = "The Hobbit",
+                Author = "J.R.R. Tolkien",
+                Genre = BookConsts.Genre.Fantasy,
+                Description = "A classic fantasy adventure.",
+                Editions = new[]
+                {
+                    new CreateBookEditionDto
+                    {
+                        Format = BookConsts.Format.Hardcover,
+                        Publisher = "Allen & Unwin",
+                        PublishedDate = DateTime.Now.AddMonths(-3),
+                        ISBN = "1234567890"
+                    }
+                }.ToList()
+            };
 
-//            await _bookAppService.CreateBook(input1);
-//            await _bookAppService.CreateBook(input2);
+            // Act
+            var bookId = await _bookAppService.CreateBook(input);
+            var book = await _bookAppService.GetBook(bookId);
 
-//            var result = await _bookAppService.GetAllBooks();
+            // Assert
+            book.ShouldNotBeNull();
+            book.Title.ShouldBe("The Hobbit");
+            book.Author.ShouldBe("J.R.R. Tolkien");
+            book.Description.ShouldBe("A classic fantasy adventure.");
+            book.Editions.Count.ShouldBe(1);
+            book.Editions.First().ISBN.ShouldBe("1234567890");
+        }
 
-//            Assert.NotNull(result);
-//            Assert.NotEmpty(result);
-//            Assert.Equal(2, result.Count);
+        [Fact]
+        public async Task Should_Throw_If_ISBN_Already_Exists()
+        {
+            // Arrange
+            var input1 = new CreateBookDto
+            {
+                Title = "Book A",
+                Author = "Author A",
+                Description = "First book with ISBN.",
+                Genre = BookConsts.Genre.Mystery,
+                Editions = new[]
+                {
+                    new CreateBookEditionDto
+                    {
+                        Format = BookConsts.Format.Paperback,
+                        Publisher = "Pub1",
+                        ISBN = "1111111111",
+                        PublishedDate = DateTime.Now
+                    }
+                }.ToList()
+            };
 
-//            var bookOne = result.FirstOrDefault(b => b.Title == "Book One");
-//            var bookTwo = result.FirstOrDefault(b => b.Title == "Book Two");
+            var input2 = new CreateBookDto
+            {
+                Title = "Book B",
+                Author = "Author B",
+                Description = "Second book with same ISBN.",
+                Genre = BookConsts.Genre.Mystery,
+                Editions = new[]
+                {
+                    new CreateBookEditionDto
+                    {
+                        Format = BookConsts.Format.Hardcover,
+                        Publisher = "Pub2",
+                        ISBN = "1111111111", // duplicate ISBN
+                        PublishedDate = DateTime.Now
+                    }
+                }.ToList()
+            };
 
-//            Assert.NotNull(bookOne);
-//            Assert.NotNull(bookTwo);
-//            Assert.Equal("Author One", bookOne.Author);
-//            Assert.Equal("Author Two", bookTwo.Author);
-//        }
+            await _bookAppService.CreateBook(input1);
 
-//        [Fact]
-//        public async Task CreateAndGetBook_Test()
-//        {
-//            await UsingDbContextAsync(async context =>
-//            {
-//                context.Books.RemoveRange(context.Books);
-//                context.BookEditions.RemoveRange(context.BookEditions);
-//                context.BookInventories.RemoveRange(context.BookInventories);
-//                await context.SaveChangesAsync();
-//            });
+            // Act + Assert
+            await Should.ThrowAsync<UserFriendlyException>(async () =>
+            {
+                await _bookAppService.CreateBook(input2);
+            });
+        }
 
-//            var input = new CreateBookDto
-//            {
-//                Title = "Test Book",
-//                Author = "Test Author",
-//                Genre = BookConsts.Genre.Fiction,
-//                Description = "Test Description",
-//                Editions = new List<CreateBookEditionDto>
-//                {
-//                    new CreateBookEditionDto
-//                    {
-//                        Format = BookConsts.Format.Hardcover,
-//                        Publisher = "Test Publisher",
-//                        PublishedDate = DateTime.Now,
-//                        ISBN = "1234567890123",
-//                        Inventory = new CreateBookInventoryDto
-//                        {
-//                            BuyPrice = 5.99m,
-//                            SellPrice = 9.99m,
-//                            StockQuantity = 10
-//                        }
-//                    }
-//                }
-//            };
-//            var bookId = await _bookAppService.CreateBook(input);
+        [Fact]
+        public async Task Should_Merge_Books_With_Same_Title_And_Author()
+        {
+            // Arrange
+            var input1 = new CreateBookDto
+            {
+                Title = "1984",
+                Author = "George Orwell",
+                Description = "Dystopian masterpiece.",
+                Genre = BookConsts.Genre.Adventure,
+                Editions = new[]
+                {
+                    new CreateBookEditionDto
+                    {
+                        Format = BookConsts.Format.Paperback,
+                        Publisher = "Secker & Warburg",
+                        ISBN = "5555555555",
+                        PublishedDate = DateTime.Now.AddMonths(-5)
+                    }
+                }.ToList()
+            };
 
-//            var createdBook = await _bookAppService.GetBook(bookId);
+            var input2 = new CreateBookDto
+            {
+                Title = "1984",
+                Author = "George Orwell", // same author
+                Description = "Duplicate entry to merge.",
+                Genre = BookConsts.Genre.Adventure,
+                Editions = new[]
+                {
+                    new CreateBookEditionDto
+                    {
+                        Format = BookConsts.Format.Hardcover,
+                        Publisher = "Penguin",
+                        ISBN = "6666666666",
+                        PublishedDate = DateTime.Now.AddMonths(-1)
+                    }
+                }.ToList()
+            };
 
-//            Assert.NotNull(createdBook);
-//            Assert.Equal("Test Book", createdBook.Title);
-//            Assert.Equal("Test Author", createdBook.Author);
-//            Assert.Equal(BookConsts.Genre.Fiction, createdBook.Genre);
-//            Assert.Equal("Test Description", createdBook.Description);
+            // Act
+            var id1 = await _bookAppService.CreateBook(input1);
+            var id2 = await _bookAppService.CreateBook(input2);
 
-//            Assert.NotNull(createdBook.Editions);
-//            Assert.Single(createdBook.Editions);
-//            var edition = createdBook.Editions.First();
-//            Assert.NotNull(edition.Inventory);
-//            Assert.Equal(10, edition.Inventory.StockQuantity);
-//            Assert.Equal(5.99m, edition.Inventory.BuyPrice);
-//            Assert.Equal(9.99m, edition.Inventory.SellPrice);
-//        }
+            // Assert
+            id2.ShouldBe(id1); // same book, merged editions
+            var book = await _bookAppService.GetBook(id1);
+            book.Editions.Count.ShouldBe(2);
+        }
 
-//        [Fact]
-//        public async Task UpdateBook_Test()
-//        {
-//            await UsingDbContextAsync(async context =>
-//            {
-//                context.Books.RemoveRange(context.Books);
-//                context.BookEditions.RemoveRange(context.BookEditions);
-//                context.BookInventories.RemoveRange(context.BookInventories);
-//                await context.SaveChangesAsync();
-//            });
+        [Fact]
+        public async Task Should_Throw_If_PublishedDate_Exceeds_One_Year_Ahead()
+        {
+            // Arrange
+            var input = new CreateBookDto
+            {
+                Title = "Future Book",
+                Author = "Futurist",
+                Description = "Set too far in the future.",
+                Genre = BookConsts.Genre.Children,
+                Editions = new[]
+                {
+                    new CreateBookEditionDto
+                    {
+                        Format = BookConsts.Format.Paperback,
+                        Publisher = "Tomorrow Press",
+                        ISBN = "2222222222",
+                        PublishedDate = DateTime.Now.AddYears(2) // invalid
+                    }
+                }.ToList()
+            };
 
-//            var createInput = new CreateBookDto
-//            {
-//                Title = "Original Title",
-//                Author = "Original Author",
-//                Genre = BookConsts.Genre.Fiction,
-//                Description = "Original Description",
-//                Editions = new List<CreateBookEditionDto>
-//                {
-//                    new CreateBookEditionDto
-//                    {
-//                        Format = BookConsts.Format.Hardcover,
-//                        Publisher = "Original Publisher",
-//                        PublishedDate = DateTime.Now,
-//                        ISBN = "1234567890123",
-//                        Inventory = new CreateBookInventoryDto
-//                        {
-//                            BuyPrice = 10.0m,
-//                            SellPrice = 15.0m,
-//                            StockQuantity = 5
-//                        }
-//                    }
-//                }
-//            };
-//            var bookId = await _bookAppService.CreateBook(createInput);
+            // Act & Assert
+            await Should.ThrowAsync<UserFriendlyException>(async () =>
+            {
+                await _bookAppService.CreateBook(input);
+            });
+        }
 
-//            var createdBook = await _bookAppService.GetBook(bookId);
-//            var editionId = createdBook.Editions.First().Id;
+        [Fact]
+        public async Task Should_Update_Book_And_Add_New_Edition()
+        {
+            // Arrange
+            var createInput = new CreateBookDto
+            {
+                Title = "Test Update Book",
+                Author = "Updater",
+                Description = "Original book before update.",
+                Genre = BookConsts.Genre.Fantasy,
+                Editions = new[]
+                {
+                    new CreateBookEditionDto
+                    {
+                        Format = BookConsts.Format.Paperback,
+                        Publisher = "InitPub",
+                        ISBN = "9999999999",
+                        PublishedDate = DateTime.Now.AddMonths(-2)
+                    }
+                }.ToList()
+            };
 
-//            var updatedEdition = new UpdateBookEditionDto
-//            {
-//                Id = editionId,
-//                BookId = bookId,
-//                Format = BookConsts.Format.Paperback, // Different format
-//                Publisher = "Updated Publisher",
-//                PublishedDate = DateTime.Now.AddDays(1),
-//                ISBN = "9876543210987", // Different ISBN
-//                Inventory = new CreateBookInventoryDto
-//                {
-//                    BuyPrice = 20.0m, // Different price
-//                    SellPrice = 25.0m,
-//                    StockQuantity = 3 // Different quantity
-//                }
-//            };
+            var bookId = await _bookAppService.CreateBook(createInput);
+            var existingBook = await _bookAppService.GetBook(bookId);
+            var editionId = existingBook.Editions.First().Id;
 
-//            var updateInput = new UpdateBookDto
-//            {
-//                Id = bookId,
-//                Title = "Updated Title",
-//                Author = "Updated Author",
-//                Genre = BookConsts.Genre.NonFiction,
-//                Description = "Updated Description",
-//                Editions = new List<UpdateBookEditionDto> { updatedEdition }
-//            };
+            var updateInput = new UpdateBookDto
+            {
+                Id = bookId,
+                Title = "Test Update Book (Updated)",
+                Author = "Updater",
+                Description = "Book updated with new edition.",
+                Genre = BookConsts.Genre.Fantasy,
+                Editions = new[]
+                {
+                    new UpdateBookEditionDto
+                    {
+                        Id = editionId,
+                        Format = BookConsts.Format.Paperback,
+                        Publisher = "InitPub",
+                        ISBN = "9999999999",
+                        PublishedDate = DateTime.Now.AddMonths(-2)
+                    },
+                    new UpdateBookEditionDto
+                    {
+                        Id = 0, // new edition
+                        Format = BookConsts.Format.Hardcover,
+                        Publisher = "NewPublisher",
+                        ISBN = "7777777777",
+                        PublishedDate = DateTime.Now.AddMonths(-1)
+                    }
+                }.ToList()
+            };
 
-//            await _bookAppService.UpdateBook(updateInput);
+            // Act
+            await _bookAppService.UpdateBook(updateInput);
+            var updated = await _bookAppService.GetBook(bookId);
 
-//            var updatedBook = await _bookAppService.GetBook(bookId);
-//            Assert.NotNull(updatedBook);
-//            Assert.Equal("Updated Title", updatedBook.Title);
-//            Assert.Equal("Updated Author", updatedBook.Author);
-//            Assert.Equal(BookConsts.Genre.NonFiction, updatedBook.Genre);
-//            Assert.Equal("Updated Description", updatedBook.Description);
-
-//            Assert.NotNull(updatedBook.Editions);
-//            Assert.Single(updatedBook.Editions);
-//            var edition = updatedBook.Editions.First();
-//            Assert.Equal(BookConsts.Format.Paperback, edition.Format);
-//            Assert.Equal("Updated Publisher", edition.Publisher);
-//            Assert.Equal("9876543210987", edition.ISBN);
-//            Assert.NotNull(edition.Inventory);
-//            Assert.Equal(3, edition.Inventory.StockQuantity);
-//            Assert.Equal(20.0m, edition.Inventory.BuyPrice);
-//            Assert.Equal(25.0m, edition.Inventory.SellPrice);
-//        }
-
-//        [Fact]
-//        public async Task UpdateBook_Add_And_Remove_Editions_Test()
-//        {
-//            // Clean DB
-//            await UsingDbContextAsync(async context =>
-//            {
-//                context.Books.RemoveRange(context.Books);
-//                context.BookEditions.RemoveRange(context.BookEditions);
-//                context.BookInventories.RemoveRange(context.BookInventories);
-//                await context.SaveChangesAsync();
-//            });
-
-//            // Create a book with 2 editions
-//            var createInput = new CreateBookDto
-//            {
-//                Title = "Book A",
-//                Author = "Author A",
-//                Genre = BookConsts.Genre.Fiction,
-//                Description = "Initial Description",
-//                Editions = new List<CreateBookEditionDto>
-//        {
-//            new CreateBookEditionDto
-//            {
-//                Format = BookConsts.Format.Hardcover,
-//                Publisher = "Publisher 1",
-//                PublishedDate = DateTime.Now,
-//                ISBN = "1111111111111",
-//                Inventory = new CreateBookInventoryDto
-//                {
-//                    BuyPrice = 10.0m,
-//                    SellPrice = 15.0m,
-//                    StockQuantity = 5
-//                }
-//            },
-//            new CreateBookEditionDto
-//            {
-//                Format = BookConsts.Format.Paperback,
-//                Publisher = "Publisher 2",
-//                PublishedDate = DateTime.Now,
-//                ISBN = "2222222222222",
-//                Inventory = new CreateBookInventoryDto
-//                {
-//                    BuyPrice = 12.0m,
-//                    SellPrice = 18.0m,
-//                    StockQuantity = 7
-//                }
-//            }
-//        }
-//            };
-
-//            var bookId = await _bookAppService.CreateBook(createInput);
-//            var createdBook = await _bookAppService.GetBook(bookId);
-//            Assert.Equal(2, createdBook.Editions.Count);
-
-//            // Prepare update:
-//            //  - Update first edition
-//            //  - Remove second edition
-//            //  - Add a new edition
-//            var editionToUpdate = createdBook.Editions.First();
-//            var editionToRemove = createdBook.Editions.Last();
-
-//            var updatedEdition = new UpdateBookEditionDto
-//            {
-//                Id = editionToUpdate.Id,
-//                BookId = bookId,
-//                Format = BookConsts.Format.Hardcover,
-//                Publisher = "Updated Publisher 1",
-//                PublishedDate = DateTime.Now.AddDays(1),
-//                ISBN = "9999999999999",
-//                Inventory = new CreateBookInventoryDto
-//                {
-//                    BuyPrice = 20.0m,
-//                    SellPrice = 25.0m,
-//                    StockQuantity = 3
-//                }
-//            };
-
-//            var newEdition = new UpdateBookEditionDto
-//            {
-//                // No Id => treated as new
-//                BookId = bookId,
-//                Format = BookConsts.Format.Paperback,
-//                Publisher = "New Publisher",
-//                PublishedDate = DateTime.Now.AddDays(2),
-//                ISBN = "3333333333333",
-//                Inventory = new CreateBookInventoryDto
-//                {
-//                    BuyPrice = 5.0m,
-//                    SellPrice = 8.0m,
-//                    StockQuantity = 10
-//                }
-//            };
-
-//            var updateInput = new UpdateBookDto
-//            {
-//                Id = bookId,
-//                Title = "Updated Book A",
-//                Author = "Updated Author A",
-//                Genre = BookConsts.Genre.NonFiction,
-//                Description = "Updated Description",
-//                Editions = new List<UpdateBookEditionDto>
-//        {
-//            updatedEdition,
-//            newEdition // new one added
-//        }
-               
-//            };
-
-//            // Act
-//            await _bookAppService.UpdateBook(updateInput);
-
-//            // Assert
-//            var updatedBook = await _bookAppService.GetBook(bookId);
-//            Assert.Equal("Updated Book A", updatedBook.Title);
-//            Assert.Equal(2, updatedBook.Editions.Count); // 1 updated + 1 new
-
-//            var updated = updatedBook.Editions.FirstOrDefault(e => e.ISBN == "9999999999999");
-//            var added = updatedBook.Editions.FirstOrDefault(e => e.ISBN == "3333333333333");
-
-//            Assert.NotNull(updated);
-//            Assert.NotNull(added);
-//            Assert.DoesNotContain(updatedBook.Editions, e => e.ISBN == "2222222222222"); // removed one
-
-//            // Updated edition check
-//            Assert.Equal("Updated Publisher 1", updated.Publisher);
-//            Assert.Equal(3, updated.Inventory.StockQuantity);
-//            Assert.Equal(25.0m, updated.Inventory.SellPrice);
-
-//            // New edition check
-//            Assert.Equal(BookConsts.Format.Paperback, added.Format);
-//            Assert.Equal("New Publisher", added.Publisher);
-//            Assert.Equal(10, added.Inventory.StockQuantity);
-//        }
-
-
-//        [Theory]
-//        [InlineData(null, "Author", BookConsts.Genre.Fiction, "Description")] // Title null
-//        [InlineData("Title", null, BookConsts.Genre.Fiction, "Description")] // Author null
-//        [InlineData("Title", "Author", BookConsts.Genre.Fiction, null)] // Description null
-//        [InlineData("", "Author", BookConsts.Genre.Fiction, "Description")] // Title empty
-//        [InlineData("Title", "", BookConsts.Genre.Fiction, "Description")] // Author empty
-//        [InlineData("Title", "Author", BookConsts.Genre.Fiction, "")] // Description empty
-//        public async Task CreateBook_Should_Throw_When_RequiredFieldsMissing(string title, string author, BookConsts.Genre genre, string description)
-//        {
-//            var input = new CreateBookDto
-//            {
-//                Title = title,
-//                Author = author,
-//                Genre = genre,
-//                Description = description,
-//                Editions = new List<CreateBookEditionDto>
-//                {
-//                    new CreateBookEditionDto
-//                    {
-//                        Format = BookConsts.Format.Hardcover,
-//                        Publisher = "Test Publisher",
-//                        PublishedDate = DateTime.Now,
-//                        ISBN = "1234567890123",
-//                        Inventory = new CreateBookInventoryDto
-//                        {
-//                            BuyPrice = 5.99m,
-//                            SellPrice = 9.99m,
-//                            StockQuantity = 10
-//                        }
-//                    }
-//                }
-//            };
-
-//            await Assert.ThrowsAsync<AbpValidationException>(() => _bookAppService.CreateBook(input));
-//        }
-
-//        [Fact]
-//        public async Task CreateBook_Should_Throw_When_Edition_Inventory_Is_Null()
-//        {
-//            var input = new CreateBookDto
-//            {
-//                Title = "Valid Title",
-//                Author = "Valid Author",
-//                Genre = BookConsts.Genre.Fiction,
-//                Description = "Valid Description",
-//                Editions = new List<CreateBookEditionDto>
-//                {
-//                    new CreateBookEditionDto
-//                    {
-//                        Format = BookConsts.Format.Hardcover,
-//                        Publisher = "Test Publisher",
-//                        PublishedDate = DateTime.Now,
-//                        ISBN = "1234567890123",
-//                        Inventory = null
-//                    }
-//                }
-//            };
-
-//            await Assert.ThrowsAsync<AbpValidationException>(() => _bookAppService.CreateBook(input));
-//        }
-
-//        [Fact]
-//        public async Task CreateBook_Should_Throw_When_Title_Too_Long()
-//        {
-//            var input = new CreateBookDto
-//            {
-//                Title = new string('A', BookConsts.MaxTitleLength + 1),
-//                Author = "Author",
-//                Genre = BookConsts.Genre.Fiction,
-//                Description = "Description",
-//                Editions = new List<CreateBookEditionDto>
-//                {
-//                    new CreateBookEditionDto
-//                    {
-//                        Format = BookConsts.Format.Hardcover,
-//                        Publisher = "Test Publisher",
-//                        PublishedDate = DateTime.Now,
-//                        ISBN = "1234567890123",
-//                        Inventory = new CreateBookInventoryDto
-//                        {
-//                            BuyPrice = 5.99m,
-//                            SellPrice = 9.99m,
-//                            StockQuantity = 10
-//                        }
-//                    }
-//                }
-//            };
-
-//            await Assert.ThrowsAsync<AbpValidationException>(() => _bookAppService.CreateBook(input));
-//        }
-
-//        [Fact]
-//        public async Task CreateBook_Should_Throw_When_Genre_Is_Invalid()
-//        {
-//            var invalidGenre = (BookConsts.Genre)9999;
-//            var input = new CreateBookDto
-//            {
-//                Title = "Title",
-//                Author = "Author",
-//                Genre = invalidGenre,
-//                Description = "Description",
-//                Editions = new List<CreateBookEditionDto>
-//                {
-//                    new CreateBookEditionDto
-//                    {
-//                        Format = BookConsts.Format.Hardcover,
-//                        Publisher = "Test Publisher",
-//                        PublishedDate = DateTime.Now,
-//                        ISBN = "1234567890123",
-//                        Inventory = new CreateBookInventoryDto
-//                        {
-//                            BuyPrice = 5.99m,
-//                            SellPrice = 9.99m,
-//                            StockQuantity = 10
-//                        }
-//                    }
-//                }
-//            };
-
-//            await Assert.ThrowsAsync<AbpValidationException>(() => _bookAppService.CreateBook(input));
-//        }
-//    }
-//}
+            // Assert
+            updated.Title.ShouldBe("Test Update Book (Updated)");
+            updated.Editions.Count.ShouldBe(2);
+        }
+    }
+}

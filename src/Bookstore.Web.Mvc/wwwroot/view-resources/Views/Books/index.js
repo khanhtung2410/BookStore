@@ -55,7 +55,7 @@
                 defaultContent: '',
                 render: (data, type, row, meta) => {
                     return [
-                        `   <button type="button" class="btn btn-sm bg-secondary edit-book" data-book-id="${row.id}" data-bs-toggle="modal" data-bs-target="#BookUpdateModal">`,
+                        `   <button type="button" class="btn btn-sm bg-secondary edit-book" data-book-id="${row.id}" data-toggle="modal" data-target="#BookUpdateModal">`,
                         `       <i class="fas fa-pencil-alt"></i> ${l('Edit')}`,
                         '   </button>',
                         `   <button type="button" class="btn btn-sm bg-danger delete-book" data-book-id="${row.id}" data-book-title="${row.title}">`,
@@ -68,6 +68,7 @@
     })
     _$modal.on('shown.bs.modal', () => {
         _$modal.find('input:not([type=hidden]):first').focus();
+        loadGenres('#BookCreateModal');
     }).on('hidden.bs.modal', () => {
         _$form.clearForm();
     });
@@ -127,8 +128,7 @@
             $('#BookUpdateModal input[name="Author"]').val(book.author);
             $('#BookUpdateModal textarea[name="Description"]').val(book.description);
 
-            loadGenres(book.genre);
-
+            loadGenres('#BookUpdateModal', book.genre);
             $editionSelect.empty().append('<option value="">-- Select an edition --</option>');
 
             if (book.editions) {
@@ -171,38 +171,118 @@
         $('#editionFields #publishedDate').val(dateOnly);
     });
 
-    async function loadGenres(selectedGenre) {
+    abp.event.on('book.edited', (data) => {
+        _$booksTable.ajax.reload();
+    })
+
+    //Create
+    _$form.find('.save-button').click(function (e) {
+        e.preventDefault();
+
+        if (!_$form.valid()) {
+            return;
+        }
+
+        var book = _$form.serializeFormToObject();
+        book.Genre = parseInt(book.Genre)
+
+        delete book.Format
+        delete book.ISBN
+        delete book.PublishedDate
+        delete book.Publisher
+
+        book.Editions = [];
+        $('#editionsContainer .edition-item').each(function () {
+            const $ed = $(this);
+            book.Editions.push({
+                Format: parseInt($ed.find('[name=Format]').val()),
+                ISBN: $ed.find('[name=ISBN]').val(),
+                Publisher: $ed.find('[name=Publisher]').val(),
+                PublishedDate: $ed.find('[name=PublishedDate]').val()
+            });
+        });
+
+        abp.ui.setBusy(_$modal);
+
+        _bookService
+            .createBook(book)
+            .done(function () {
+                _$modal.modal('hide');
+                _$form[0].reset();
+                abp.notify.info(l('SavedSuccessfully'));
+                _$booksTable.ajax.reload();
+            })
+            .always(function () {
+                abp.ui.clearBusy(_$modal);
+            });
+    });
+
+    // Add new edition block
+    $('#btnAddEdition').on('click', function () {
+        const editionHtml = `
+        <div class="edition-item border rounded p-3 mb-3">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="fw-bold">${l('Format')}</label>
+                    <select name="Format" class="form-select">
+                        <option value="0">Hardcover</option>
+                        <option value="1">Paperback</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="fw-bold">${l('ISBN')}</label>
+                    <input type="text" name="ISBN" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="fw-bold">${l('Publisher')}</label>
+                    <input type="text" name="Publisher" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="fw-bold">${l('PublishedDate')}</label>
+                    <input type="date" name="PublishedDate" class="form-control" />
+                </div>
+            </div>
+            <div class="text-end mt-2">
+                <button type="button" class="btn btn-danger btn-sm btn-remove-edition">${l('Remove')}</button>
+            </div>
+        </div>`;
+        $('#editionsContainer').append(editionHtml);
+    });
+
+    // Remove edition block
+    $(document).on('click', '.btn-remove-edition', function () {
+        $(this).closest('.edition-item').remove();
+    });
+
+
+    async function loadGenres(modalSelector, selectedGenre) {
         try {
-            // Call the app service
             const genres = await abp.services.app.book.getBookGenre();
 
-            const $genreSelect = $('#BookUpdateModal select[name="Genre"]');
+            const $genreSelect = $(`${modalSelector} select[name="Genre"]`);
             $genreSelect.empty(); // clear old options
 
-            // Add a placeholder
+            // Add placeholder
             $genreSelect.append('<option value="">-- Select Genre --</option>');
 
-            // Populate options
+            // Populate genre options
             genres.forEach(g => {
                 const $option = $('<option></option>')
                     .val(g.value)
                     .text(g.text);
-                // Change value type to match selectedGenre to compare
-                if (parseInt(g.value) === selectedGenre) {
+                if (parseInt(g.value) === Number(selectedGenre)) {
+
                     $option.prop('selected', true);
                 }
+
                 $genreSelect.append($option);
             });
-
         } catch (err) {
             console.error('Failed to load genres', err);
-            $('#BookUpdateModal select[name="Genre"]').html('<option value="">Failed to load genres</option>');
+            $(`${modalSelector} select[name="Genre"]`)
+                .html('<option value="">Failed to load genres</option>');
         }
     }
-
-    abp.event.on('book.edited', (data) => {
-        _$booksTable.ajax.reload();
-    })
 
     //Import
     //$(document).on('click', '.btn-import-books', function (e) {

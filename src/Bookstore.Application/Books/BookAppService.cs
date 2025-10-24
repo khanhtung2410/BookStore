@@ -29,15 +29,38 @@ namespace Bookstore.Books
         {
             if (input.Editions == null || !input.Editions.Any())
                 throw new UserFriendlyException("A book must have at least one edition.");
-            var book = new Book(
-                input.Title,
-                input.Author,
-                input.Genre,
-                input.Description
-            );
-            var createdBookId = await _bookRepository.InsertAndGetIdAsync(book);
+
+            var existingBook = await _bookRepository
+                .FirstOrDefaultAsync(b => b.Title == input.Title && b.Author == input.Author);
+
+            int createdBookId;
+
+            if (existingBook != null)
+            {
+                createdBookId = existingBook.Id;
+            }
+            else
+            {
+                var newBook = new Book(
+                    input.Title,
+                    input.Author,
+                    input.Genre,
+                    input.Description
+                );
+                createdBookId = await _bookRepository.InsertAndGetIdAsync(newBook);
+            }
+
             foreach (var editionDto in input.Editions)
             {
+                var existingEdition = await _bookEditionRepository.FirstOrDefaultAsync(e => e.ISBN == editionDto.ISBN);
+                if (existingEdition != null)
+                {
+                    throw new UserFriendlyException($"The ISBN '{editionDto.ISBN}' already exists for another book edition.");
+                }
+                if(editionDto.PublishedDate > DateTime.Now.AddYears(1))
+                {
+                    throw new UserFriendlyException("$The Published Date cannot be more than one year from now");
+                }
                 var edition = new BookEdition(
                     createdBookId,
                     editionDto.Format,
@@ -47,14 +70,18 @@ namespace Bookstore.Books
                 );
                 var editionId = await _bookEditionRepository.InsertAndGetIdAsync(edition);
 
-                // 3️⃣ For each Edition, create its Inventory
-                var inventory = new BookInventory(
-                    editionId,
-                    editionDto.Inventory.BuyPrice,
-                    editionDto.Inventory.SellPrice,
-                    editionDto.Inventory.StockQuantity
-                );
-                await _bookInventoryRepository.InsertAsync(inventory);
+                // For each Edition, create its Inventory if exist
+                if (editionDto.Inventory != null)
+                {
+                    var inventory = new BookInventory(
+                        editionId,
+                        editionDto.Inventory.BuyPrice,
+                        editionDto.Inventory.SellPrice,
+                        editionDto.Inventory.StockQuantity
+                    );
+
+                    await _bookInventoryRepository.InsertAsync(inventory);
+                }
             }
 
             return createdBookId;
@@ -230,6 +257,17 @@ namespace Bookstore.Books
                     {
                         throw new UserFriendlyException($"Another edition with ISBN {editionInput.ISBN} already exists.");
                     }
+
+                    if (string.IsNullOrWhiteSpace(edition.ISBN))
+                        throw new UserFriendlyException("ISBN cannot be empty.");
+
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(edition.ISBN, @"^\d+$"))
+                        throw new UserFriendlyException($"ISBN '{edition.ISBN}' is invalid. It must contain only digits (0-9).");
+
+                    var publishedDate = editionInput.PublishedDate ?? DateTime.Now;
+                    if (publishedDate > DateTime.Now.AddYears(1))
+                        throw new UserFriendlyException($"The published date ({publishedDate:yyyy-MM-dd}) cannot be more than one year in the future.");
+
 
                     edition.Format = editionInput.Format;
                     edition.Publisher = editionInput.Publisher;

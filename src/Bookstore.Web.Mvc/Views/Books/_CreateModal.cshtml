@@ -2,22 +2,86 @@
 @{
     Layout = null;
 }
-<div class="modal fade" id="BooksImportModal" tabindex="-1" role="dialog" data-bs-backdrop="static">
+<div class="modal fade" id="BookCreateModal" tabindex="-1" role="dialog" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
-            @await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(L("ImportBook")))
-            <form id="importForm" method="post" enctype="multipart/form-data" role="form" action="/Books/ImportExcel">
-                <div class="mb-3">
-                    <label for="ExcelFile" class="form-label">Select Excel File</label>
-                    <input type="file" class="form-control" id="ExcelFile" name="ExcelFile" required>
+            @await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(L("CreateBook")))
+            <form id="createForm" enctype="multipart/form-data" role="form">
+                <div class="modal-body">
+                    <div class="tab-content mt-3">
+                        <div class="mb-3 row">
+                            <label class="col-md-3 col-form-label fw-bold required">@L("Title")</label>
+                            <div class="col-md-9">
+                                <input id="title" class="form-control" type="text" name="Title"
+                                       value="@Model.Title" required maxlength="200" placeholder="@L("EnterTitle")">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label class="col-md-3 col-form-label fw-bold required">@L("Author")</label>
+                            <div class="col-md-9">
+                                <input id="author" class="form-control" type="text" name="Author"
+                                       value="@Model.Author" required maxlength="50" placeholder="@L("EnterAuthor")">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label class="col-md-3 col-form-label fw-bold required">@L("Genre")</label>
+                            <div class="col-md-9">
+                                <select id="genre" class="form-select" name="Genre" required>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label class="col-md-3 col-form-label fw-bold">@L("Description")</label>
+                            <div class="col-md-9">
+                                <textarea id="description" class="form-control" name="Description" rows="3"
+                                          placeholder="@L("EnterDescription")" required>@Model.Description</textarea>
+                            </div>
+                        </div>
+                        <hr />
+                        <h5 class="fw-bold mb-3">@L("EditionDetails")</h5>
+
+                        <div id="editionsContainer">
+                            <div class="edition-item border rounded p-3 mb-3">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label class="fw-bold">@L("Format")</label>
+                                        <select name="Format" class="form-select">
+                                            <option value="0">Hardcover</option>
+                                            <option value="1">Paperback</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="fw-bold">@L("ISBN")</label>
+                                        <input type="text" name="ISBN" class="form-control" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="fw-bold">@L("Publisher")</label>
+                                        <input type="text" name="Publisher" class="form-control" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="fw-bold">@L("PublishedDate")</label>
+                                        <input type="date" name="PublishedDate" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="text-end mt-2">
+                                    <button type="button" class="btn btn-danger btn-sm btn-remove-edition">@L("Remove")</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-end mb-3">
+                            <button type="button" class="btn btn-primary btn-sm" id="btnAddEdition">
+                                + @L("AddEdition")
+                            </button>
+                        </div>
+                        @await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+                    </div>
                 </div>
-                <button type="button" class="btn btn-secondary" id="getFormatExcel">Get Excel Template</button>
-                <button type="submit" class="btn btn-primary">Import</button>
             </form>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script src="~/view-resources/Views/Books/_ImportModal.js?v=@DateTime.Now.Ticks"></script>
-}

@@ -31,11 +31,9 @@
 
         abp.ui.setBusy(_$form);
         _bookService.updateBook(book).done(function () {
+            _$modal.modal('hide');
             abp.notify.info(l('SavedSuccessfully'));
             abp.event.trigger('book.edited', book);
-            setTimeout(()=>{
-                _$modal.modal('hide');
-},300);
         })
             .fail(function (error) {
                 abp.notify.error(error.message);

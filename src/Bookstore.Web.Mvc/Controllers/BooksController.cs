@@ -51,7 +51,7 @@ namespace Bookstore.Web.Controllers
         public async Task<ActionResult> Detail(int id)
         {
             var book = await _bookAppService.GetBook(id);
-            if (book == null )
+            if (book == null)
             {
                 TempData["ErrorMessage"] = "This book is no longer available.";
                 return RedirectToAction("Index"); // redirect to list page
@@ -94,87 +94,6 @@ namespace Bookstore.Web.Controllers
                     }).ToList()
             };
             return View(model);
-        }
-
-        public ActionResult Create()
-        {
-            var model = new Models.Books.BookCreateViewModel();
-
-            model.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
-            .Cast<BookConsts.Genre>()
-            .Select(g => new SelectListItem
-            {
-                Value = g.ToString(),
-                Text = g.ToString()
-            }).ToList();
-           
-            model.Editions = new List<BookEditionCreateViewModel>
-            {
-                new BookEditionCreateViewModel
-                {
-                    FormatList = Enum.GetValues(typeof(BookConsts.Format)).Cast<BookConsts.Format>()
-                    .Select(f => new SelectListItem
-                    {
-                        Value = f.ToString(),
-                        Text = f.ToString()
-                    }).ToList()
-                }
-            };
-
-            return View(model);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(BookCreateViewModel model)
-        {
-            // Validate presence of nested objects
-            if (model == null || model.Editions == null)
-            {
-                ModelState.AddModelError(string.Empty, "Invalid book data. Please add an Edition.");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                model ??= new BookCreateViewModel();
-
-                // Repopulate GenreList for the select element
-                model.GenreList = Enum.GetValues(typeof(BookConsts.Genre))
-                    .Cast<BookConsts.Genre>()
-                    .Select(g => new SelectListItem
-                    {
-                        Value = g.ToString(),
-                        Text = g.ToString()
-                    }).ToList();
-
-                return View(model);
-            }
-
-            var dto = new CreateBookDto
-            {
-                Title = model.Title,
-                Author = model.Author,
-                Genre = model.Genre,
-                Description = model.Description,
-                Editions = model.Editions.Select(e => new CreateBookEditionDto
-                {
-                    Format = e.Format,
-                    PublishedDate = e.PublishedDate,
-                    Publisher = e.Publisher,
-                    ISBN = e.ISBN,
-                    Inventory = new CreateBookInventoryDto
-                    {
-                        StockQuantity = e.Inventory.StockQuantity,
-                        BuyPrice = e.Inventory.BuyPrice,
-                        SellPrice = e.Inventory.SellPrice
-                    }
-                }).ToList()
-            };
-
-            await _bookAppService.CreateBook(dto);
-
-            // On success, redirect to the list page
-            return RedirectToAction(nameof(Index));
         }
     }
 }

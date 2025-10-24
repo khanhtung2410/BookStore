@@ -22,11 +22,9 @@ namespace Bookstore.Books.Dto
         public DateTime? PublishedDate { get; set; }
 
         [Required]
-        [StringLength(50)]
+        [StringLength(13)]
         public string ISBN { get; set; }
-
-        [Required]
-        public CreateBookInventoryDto Inventory { get; set; } // Added inventory to edition
+        public CreateBookInventoryDto? Inventory { get; set; } // Added inventory to edition
     }
 
     public class CreateBookInventoryDto
@@ -77,9 +75,15 @@ namespace Bookstore.Books.Dto
             }
             foreach (var edition in Editions)
             {
-                if (edition.Inventory == null)
+                if (edition.Inventory != null)
                 {
-                    yield return new ValidationResult("Inventory is required for each edition.", new[] { nameof(Editions) });
+                    var context = new ValidationContext(edition.Inventory);
+                    var results = new List<ValidationResult>();
+                    Validator.TryValidateObject(edition.Inventory, context, results, true);
+                    foreach (var result in results)
+                    {
+                        yield return result;
+                    }
                 }
             }
         }
