@@ -11,53 +11,53 @@ namespace Bookstore.Books.Dto
 {
     public class CreateBookEditionDto
     {
-        [Required]
+        [Required(ErrorMessage = "FormatIsRequired")]
         public BookConsts.Format Format { get; set; }
 
-        [Required]
-        [StringLength(100)]
+        [Required(ErrorMessage = "PublisherIsRequired")]
+        [StringLength(100, ErrorMessage = "PublisherMaxLengthExceeded")]
         public string Publisher { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "PublishedDateIsRequired")]
         public DateTime? PublishedDate { get; set; }
 
-        [Required]
-        [StringLength(13)]
+        [Required(ErrorMessage = "ISBNIsRequired")]
+        [StringLength(13, ErrorMessage = "ISBNMaxLengthExceeded")]
         public string ISBN { get; set; }
         public CreateBookInventoryDto? Inventory { get; set; } // Added inventory to edition
     }
 
     public class CreateBookInventoryDto
     {
-        [Required(ErrorMessage = "Inventory buy price is required.")]
-        [Range(0.0, double.MaxValue, ErrorMessage = "Buy price must be a non-negative number.")]
+        [Required(ErrorMessage = "BuyPriceRequired")]
+        [Range(0.0, double.MaxValue, ErrorMessage = "BuyPriceNonNegative")]
         public decimal BuyPrice { get; set; }
 
-        [Required(ErrorMessage = "Inventory sell price is required.")]
-        [Range(0.0, double.MaxValue, ErrorMessage = "Sell price must be a non-negative number.")]
+        [Required(ErrorMessage = "SellPriceRequired")]
+        [Range(0.0, double.MaxValue, ErrorMessage = "SellPriceNonNegative")]
         public decimal SellPrice { get; set; }
 
-        [Required]
-        [Range(0, long.MaxValue, ErrorMessage = "Stock quantity must be a non-negative number.")]
+        [Required(ErrorMessage = "StockQuantityRequired")]
+        [Range(0, long.MaxValue, ErrorMessage = "StockQuantityNonNegative")]
         public long StockQuantity { get; set; }
     }
 
     [AutoMapTo(typeof(Book))]
     public class CreateBookDto : IValidatableObject
     {
-        [Required(ErrorMessage = "Title is required.")]
-        [StringLength(BookConsts.MaxTitleLength)]
+        [Required(ErrorMessage = "TitleIsRequired")]
+        [StringLength(BookConsts.MaxTitleLength, ErrorMessage = "TitleMaxLengthExceeded")]
         public string Title { get; set; }
 
-        [Required(ErrorMessage = "Author is required.")]
-        [StringLength(BookConsts.MaxAuthorLength)]
+        [Required(ErrorMessage = "AuthorIsRequired")]
+        [StringLength(BookConsts.MaxAuthorLength, ErrorMessage = "AuthorMaxLengthExceeded")]
         public string Author { get; set; }
 
-        [Required(ErrorMessage = "Genre is required.")]
+        [Required(ErrorMessage = "GenreIsRequired")]
         public BookConsts.Genre Genre { get; set; }
 
-        [Required(ErrorMessage = "Description is required.")]
-        [StringLength(BookConsts.MaxDescriptionLength)]
+        [Required(ErrorMessage = "DescriptionIsRequired")]
+        [StringLength(BookConsts.MaxDescriptionLength, ErrorMessage = "DescriptionMaxLengthExceeded")]
         public string Description { get; set; }
 
         [Required]
@@ -68,11 +68,11 @@ namespace Bookstore.Books.Dto
         {
             if (!Enum.IsDefined(typeof(BookConsts.Genre), Genre))
             {
-                yield return new ValidationResult("Genre is required and must be a valid value.", new[] { nameof(Genre) });
+                yield return new ValidationResult("InvalidGenre", new[] { nameof(Genre) });
             }
             if (Editions == null || Editions.Count == 0)
             {
-                yield return new ValidationResult("At least one edition is required.", new[] { nameof(Editions) });
+                yield return new ValidationResult("AtLeastOneEditionRequired", new[] { nameof(Editions) });
             }
             foreach (var edition in Editions)
             {

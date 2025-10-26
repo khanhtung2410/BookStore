@@ -1,0 +1,208 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<localizationDictionary culture="vi">
+	<texts>
+		<text name="HomePage" value="Trang chủ" />
+		<text name="About" value="About" />
+		<text name="WelcomeMessage" value="Welcome to Bookstore!" />
+		<text name="FormIsNotValidMessage" value="Form is not valid. Please check and fix errors." />
+		<text name="TenantNameCanNotBeEmpty" value="Tenant name can not be empty" />
+		<text name="InvalidUserNameOrPassword" value="Invalid user name or password" />
+		<text name="ThereIsNoTenantDefinedWithName{0}" value="There is no tenant defined with name {0}" />
+		<text name="TenantIsNotActive" value="Tenant {0} is not active." />
+		<text name="UserIsNotActiveAndCanNotLogin" value="User {0} is not active and can not log in." />
+		<text name="UserEmailIsNotConfirmedAndCanNotLogin">Your email address is not confirmed. You can not login.</text>
+		<text name="UserLockedOutMessage">The user account has been locked out. Please try again later.</text>
+		<text name="PleaseEnterLoginInformation" value="Please enter login information" />
+		<text name="TenancyName" value="Tenancy name" />
+		<text name="UserNameOrEmail" value="User name or email" />
+		<text name="Password" value="Password" />
+		<text name="ResetPassword" value="Reset Password" />
+		<text name="UpdatePassword" value="Update Password" />
+		<text name="RememberMe" value="Remember me" />
+		<text name="LogIn" value="Log in" />
+		<text name="LoginFailed" value="Login failed!" />
+		<text name="NameSurname" value="Name surname" />
+		<text name="UserName" value="User name" />
+		<text name="Name" value="Name" />
+		<text name="Surname" value="Surname" />
+		<text name="EmailAddress" value="Email address" />
+		<text name="Tenants" value="Tenants" />
+		<text name="SavedSuccessfully" value="Lưu thành công" />
+		<text name="CreateNewTenant" value="Create new tenant" />
+		<text name="AdminEmailAddress" value="Admin email address" />
+		<text name="AdminPassword" value="Admin password" />
+		<text name="Save" value="Lưu" />
+		<text name="Cancel" value="Hủy" />
+		<text name="TenantName_Regex_Description" value="Tenant name must be at least 2 chars, starts with a letter and continue with letter, number, dash or underscore." />
+		<text name="DefaultPasswordIs" value="Default password is {0}" />
+		<text name="CanBeEmptyToLoginAsHost" value="Can be empty to login as host." />
+		<text name="Register" value="Register" />
+		<text name="OrLoginWith" value="Or login with" />
+		<text name="WaitingForActivationMessage" value="Your account is waiting to be activated by system admin." />
+		<text name="TenantSelection" value="Tenant Selection" />
+		<text name="TenantSelection_Detail" value="Please select one of the following tenants." />
+		<text name="Logout" value="Logout" />
+		<text name="RegisterFormUserNameInvalidMessage">Please don't enter an email address for username.</text>
+		<text name="DatabaseConnectionString" value="Database connection string" />
+		<text name="Users" value="Users" />
+		<text name="IsActive" value="Is active" />
+		<text name="FullName" value="Full name" />
+		<text name="CreateNewUser" value="Create new user" />
+		<text name="Yes" value="Có" />
+		<text name="No" value="Không" />
+		<text name="Optional" value="Optional" />
+		<text name="LeaveEmptyToSwitchToHost">Leave empty to switch to the host</text>
+		<text name="CurrentTenant">Current tenant</text>
+		<text name="NotSelected">Not selected</text>
+		<text name="Change">Change</text>
+		<text name="ChangeTenant">Change tenant</text>
+		<text name="MultiLevelMenu">Multi Level Menu</text>
+		<text name="Back">Back</text>
+		<text name="SuccessfullyRegistered">Successfully registered</text>
+		<text name="WaitingForEmailActivation">Your email address should be activated</text>
+		<text name="Roles">Roles</text>
+		<text name="DisplayName">Display Name</text>
+		<text name="View">Xem</text>
+		<text name="Edit">Sửa</text>
+		<text name="Delete">Xóa</text>
+		<text name="CreateNewRole">Create new role</text>
+		<text name="RoleName">Role Name</text>
+		<text name="Actions">Thao tác</text>
+		<text name="CouldNotCompleteLoginOperation">Could not complete login operation. Please try again later.</text>
+		<text name="CouldNotValidateExternalUser">Could not validate external user</text>
+		<text name="EditRole">Edit role</text>
+		<text name="EditTenant">Edit tenant</text>
+		<text name="EditUser">Edit user</text>
+		<text name="TenantIdIsNotActive{0}">TenantId {0} is not active</text>
+		<text name="UnknownTenantId{0}">Unknown tenantId {0}</text>
+		<text name="ThisFieldIsRequired">This field is required</text>
+		<text name="PleaseWait">Please wait...</text>
+		<text name="Administration">Administration</text>
+		<text name="ClearAll">Clear all</text>
+		<text name="ClearOthers">Clear others</text>
+		<text name="LabelOptions">Label options</text>
+		<text name="Permissions">Permissions</text>
+		<text name="RoleDescription">Role description</text>
+		<text name="Refresh">Refresh</text>
+		<text name="Create">Thêm</text>
+		<text name="UserDetails">User details</text>
+		<text name="UserRoles">User roles</text>
+		<text name="ConfirmPassword">Confirm password</text>
+		<text name="Version">Version</text>
+		<text name="On">On</text>
+		<text name="Off">Off</text>
+		<text name="AreYouSureWantToDelete">Bạn có chắc chắn muốn xóa {0}?</text>
+		<text name="SuccessfullyDeleted">Xóa thành công</text>
+		<text name="StartTyping">Start Typing</text>
+		<text name="Skins">Skins</text>
+		<text name="Settings">Settings</text>
+		<text name="Filter">Filter</text>
+		<text name="CurrentPassword">Current Password</text>
+		<text name="NewPassword">New Password</text>
+		<text name="ConfirmNewPassword">Confirm New Password</text>
+		<text name="PasswordsDoNotMatch">Passwords do not match</text>
+		<text name="PasswordsMustBeAtLeast8CharactersContainLowercaseUppercaseNumber">Passwords must be at least 8 characters, contain a lowercase, uppercase, and number</text>
+		<text name="UserDeleteWarningMessage">User {0} will be deleted.</text>
+		<text name="RoleDeleteWarningMessage">Role {0} will be deleted and unassigned from all assigned users.</text>
+		<text name="TenantDeleteWarningMessage">Tenant {0} will be deleted.</text>
+		<text name="SearchWithThreeDot">Search...</text>
+		<text name="PleaseEnterAtLeastNCharacter">Please enter at least {0} characters</text>
+		<text name="PleaseEnterNoMoreThanNCharacter">Please enter no more than {0} characters</text>
+		<text name="InvalidEmailAddress">Invalid email address</text>
+		<text name="InvalidPattern">Invalid</text>
+		<text name="PairsDoNotMatch">Do not match</text>
+		<text name="All">Tất cả</text>
+		<text name="TotalRecordsCount">Total: {0}</text>
+		<text name="Search">Search</text>
+		<text name="Clear">Clear</text>
+		<text name="ResetPasswordStepOneInfo">1. Enter your administrator password</text>
+		<text name="ResetPasswordStepTwoInfo">2. Copy this random password so you can send it to the user</text>
+		<text name="UsersActivation">Users activation</text>
+		<text name="403PageHeader">Forbidden</text>
+		<text name="403PageDescription">You don't have permission to access this resource. Please contact your administrator.</text>
+		<text name="403PageButton">Go back to Dashboard</text>
+
+		<text name="Books" value="Danh sách sách"></text>
+		<text name="BookDetails" value="Thông tin sách"></text>
+		<text name="Title" value="Tên sách"></text>
+		<text name="Author" value="Tác giả"></text>
+		<text name="Genre" value="Thể loại"></text>
+		<text name="Description" value="Giới thiệu"></text>
+		<text name="Format" value="Loại sách"></text>
+		<text name="Publisher" value="Nhà xuất bản"></text>
+		<text name="PublishedDate" value="Ngày xuất bản"></text>
+		<text name="ISBN" value="ISBN"></text>
+		<text name="BookImages" value="Ảnh sách"></text>
+
+		<text name="Hardcover" value="Bìa cứng"></text>
+		<text name="Paperback" value="Bìa mềm"></text>
+
+		<text name="CreateBook" value="Thêm sách"></text>
+		<text name="UpdateBook" value="Chỉnh sách"></text>
+		<text name="EnterTitle" value="Nhập tên sách"></text>
+		<text name="EnterAuthor" value="Nhập tên tác giả"></text>
+		<text name="EnterDescription" value="Nhập giới thiệu sách"></text>
+		<text name="Remove" value="Bỏ"></text>
+		<text name="EditionDetails" value="Chi tiết sách"></text>
+		<text name="AddEdition" value="Thêm ấn bản"></text>
+
+		<text name="SelectEdition" value="Chọn ấn bản"></text>
+		<text name="SelectAnEdition" value="Chọn ấn bản"></text>
+		<text name="SelectGenre" value="Chọn thể loại"></text>
+		<text name="FailedToLoadGenres" value="Không tải được danh sách thể loại"></text>
+
+		<text name="BookMustHaveAtLeastOneEdition" value="Sách phải có ít nhất một ấn bản." />
+		<text name="DuplicateISBN" value="ISBN '{0}' đã tồn tại cho một ấn bản khác." />
+		<text name="InvalidGenre" value="Thể loại không hợp lệ"></text>
+		<text name="InvalidFormat" value="Loại sách không hợp lệ"></text>
+		<text name="InvalidPublishedDateFuture" value="Ngày xuất bản không được vượt quá một năm kể từ hiện tại." />
+		<text name="EmptyISBN" value="Mã ISBN không được để trống." />
+		<text name="InvalidISBNFormat" value="Mã ISBN '{0}' không hợp lệ. Chỉ được chứa các chữ số (0-9)." />
+		<text name="InvalidImageFormat" value="Định dạng hình ảnh không hợp lệ cho '{0}'. Chỉ cho phép: JPG, JPEG, PNG, WEBP." />
+		<text name="InvalidImageFileType" value="Loại tệp hình ảnh không hợp lệ." />
+		<text name="BookNotFound" value="Không tìm thấy sách." />
+		<text name="NoFilesProvided" value="Không có tệp nào được cung cấp." />
+
+		<text name="TitleIsRequired" value="Tiêu đề không được để trống." />
+		<text name="AuthorIsRequired" value="Tác giả không được để trống." />
+		<text name="GenreIsRequired" value="Thể loại không được để trống." />
+		<text name="DescriptionIsRequired" value="Mô tả không được để trống." />
+		<text name="AtLeastOneEditionRequired" value="Phải có ít nhất một ấn bản." />
+
+		<text name="FormatIsRequired" value="Loại sách không được để trống." />
+		<text name="PublisherIsRequired" value="Nhà xuất bản không được để trống." />
+		<text name="PublishedDateIsRequired" value="Ngày xuất bản không được để trống." />
+		<text name="ISBNIsRequired" value="Mã ISBN không được để trống." />
+
+		<text name="BuyPriceRequired" value="Giá nhập không được để trống." />
+		<text name="SellPriceRequired" value="Giá bán không được để trống." />
+		<text name="BuyPriceNonNegative" value="Giá nhập phải lớn hơn hoặc bằng 0." />
+		<text name="SellPriceNonNegative" value="Giá bán phải lớn hơn hoặc bằng 0." />
+		<text name="StockQuantityNonNegative" value="Số lượng tồn kho phải lớn hơn hoặc bằng 0." />
+
+		<text name="TitleMaxLengthExceeded" value="{0} không được vượt quá {1} ký tự." />
+		<text name="AuthorMaxLengthExceeded" value="{0} không được vượt quá {1} ký tự." />
+		<text name="DescriptionMaxLengthExceeded" value="{0} không được vượt quá {1} ký tự." />
+		<text name="PublisherMaxLengthExceeded" value="{0} không được vượt quá {1} ký tự." />
+		<text name="ISBNMaxLengthExceeded" value="{0} không được vượt quá {1} ký tự." />
+
+		<text name="Genre_Fiction">Tiểu thuyết</text>
+		<text name="Genre_NonFiction">Phi hư cấu</text>
+		<text name="Genre_Mystery">Bí ẩn</text>
+		<text name="Genre_Thriller">Giật gân</text>
+		<text name="Genre_Romance">Lãng mạn</text>
+		<text name="Genre_Fantasy">Giả tưởng</text>
+		<text name="Genre_ScienceFiction">Khoa học viễn tưởng</text>
+		<text name="Genre_Biography">Tiểu sử</text>
+		<text name="Genre_History">Lịch sử</text>
+		<text name="Genre_Adventure">Phiêu lưu</text>
+		<text name="Genre_Children">Thiếu nhi</text>
+		<text name="Genre_SelfHelp">Phát triển bản thân</text>
+		<text name="Genre_Classic">Kinh điển</text>
+		<text name="Genre_Travel">Du lịch</text>
+		<text name="Genre_Cooking">Nấu ăn</text>
+		<text name="Genre_Horror">Kinh dị</text>
+		<text name="Genre_GraphicNovel">Truyện tranh</text>
+
+	</texts>
+</localizationDictionary>

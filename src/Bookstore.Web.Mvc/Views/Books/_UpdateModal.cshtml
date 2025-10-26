@@ -57,6 +57,15 @@
                                               placeholder="@L("EnterDescription")">@Model.Description</textarea>
                                 </div>
                             </div>
+
+                            <div class="mb-3 row">
+                                <label class="col-md-3 col-form-label fw-bold">@L("BookImages")</label>
+                                <div class="col-md-9" id="imagesContainer">
+                                    <input type="file" id="bookImages" multiple class="form-control-file" />
+                                    <div id="imagePreview" class="row mt-2"></div>
+                                    <div id="imageLinks" class="mt-2"></div>
+                                </div>  
+                            </div>
                         </div>
 
                         <!-- Edition Details -->
@@ -85,8 +94,8 @@
                                     <label class="col-md-3 col-form-label fw-bold">@L("Format")</label>
                                     <div class="col-md-9">
                                         <select id="format" class="form-select form-control" name="Format">
-                                            <option value="Hardcover">Hardcover</option>
-                                            <option value="Paperback">Paperback</option>
+                                            <option value="0">@L("Hardcover")</option>
+                                            <option value="1">@L("Paperback")</option>
                                         </select>
                                     </div>
                                 </div>

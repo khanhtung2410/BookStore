@@ -16,14 +16,14 @@
             {
                 Id: parseInt(book.SelectedEditionId, 10),
                 BookId: parseInt(book.Id, 10),
-                Format: book.Format === "Hardcover" ? 0 : 1,
+                Format: parseInt(book.Format, 10),
                 ISBN: book.ISBN,
                 Publisher: book.Publisher,
                 PublishedDate: book.PublishedDate
             }
         ];
 
-        delete book.Format;
+        delete book.Format; 
         delete book.ISBN;
         delete book.Publisher;
         delete book.SelectedEditionId;

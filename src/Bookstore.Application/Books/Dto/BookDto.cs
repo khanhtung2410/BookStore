@@ -13,15 +13,19 @@ namespace Bookstore.Books.Dto
     {
         [Required]
         public int Id { get; set; }
-        [Required]
-        [StringLength(BookConsts.MaxTitleLength, ErrorMessage = "Title can't be too long")]
+        [Required(ErrorMessage = "TitleIsRequired")]
+        [StringLength(BookConsts.MaxTitleLength, ErrorMessage = "TitleMaxLengthExceeded")]
         public string Title { get; set; }
-        [Required]
-        [StringLength(BookConsts.MaxAuthorLength)]
+
+        [Required(ErrorMessage = "AuthorIsRequired")]
+        [StringLength(BookConsts.MaxAuthorLength, ErrorMessage = "AuthorMaxLengthExceeded")]
         public string Author { get; set; }
-        [EnumDataType(typeof(BookConsts.Genre),ErrorMessage ="Please select valid genre")]
+
+        [EnumDataType(typeof(BookConsts.Genre),ErrorMessage = "InvalidGenre")]
         public BookConsts.Genre Genre { get; set; }
-        [StringLength(BookConsts.MaxDescriptionLength, ErrorMessage = "Description can't be too long")]
+
+        [Required(ErrorMessage = "DescriptionIsRequired")]
+        [StringLength(BookConsts.MaxDescriptionLength, ErrorMessage = "DescriptionMaxLengthExceeded")]
         public string Description { get; set; }
         public List<BookEditionDto> Editions { get; set; } = new();
         public List<BookImageDto>? Images { get; set; } = new();
@@ -32,14 +36,16 @@ namespace Bookstore.Books.Dto
         public int Id { get; set; }
         [Required]
         public int BookId { get; set; }
-        [EnumDataType(typeof(BookConsts.Format), ErrorMessage = "Please select valid format")]
+        [EnumDataType(typeof(BookConsts.Format), ErrorMessage = "InvalidFormat")]
         public BookConsts.Format Format { get; set; }
-        [Required]
+        [Required(ErrorMessage = "PublisherIsRequired")]
+        [StringLength(100, ErrorMessage = "PublisherMaxLengthExceeded")]
         public string Publisher { get; set; }
-        [Required]
+        [Required(ErrorMessage = "PublishedDateIsRequired")]
         public DateTime PublishedDate { get; set; }
-        [Required]
-        [StringLength(13, ErrorMessage = "ISBN can't be longer than 13 characters")]
+
+        [Required(ErrorMessage = "ISBNIsRequired")]
+        [StringLength(13, ErrorMessage = "ISBNMaxLengthExceeded")]
         public string ISBN { get; set; }
         public BookInventoryDto Inventory { get; set; }
         public DiscountDto? Discount { get; set; }

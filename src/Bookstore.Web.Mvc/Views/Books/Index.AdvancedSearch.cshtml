@@ -29,12 +29,12 @@
                                                        id="Genre_@genre"
                                                        name="Genre"
                                                        value="@((int)genre)">
-                                                <label for="Genre_@genre">@genre</label>
+                                                <label for="Genre_@genre">@L($"Genre_{genre}")</label>
                                             </div>
                                         }
                                         <div class="icheck-primary d-inline mr-3">
                                             <input type="radio" id="Genre_All" name="Genre" value="" checked>
-                                            <label for="Genre_All">All</label>
+                                            <label for="Genre_All">@L("All")</label>
                                         </div>
                                     </div>
                                 </div>

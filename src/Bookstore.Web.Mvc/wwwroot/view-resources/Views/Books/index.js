@@ -46,6 +46,11 @@
                 targets: 3,
                 data: 'genre',
                 sortable: false,
+                render: function (data, type, row, meta) {
+                    if (!data) return '';
+                    const localized = l('Genre_' + data); // e.g., l('Genre_Mystery')
+                    return localized || data; // fallback to raw string if missing
+                }
             },
             {
                 targets: 4,
@@ -55,6 +60,9 @@
                 defaultContent: '',
                 render: (data, type, row, meta) => {
                     return [
+                        `   <button type="button" class="btn btn-sm bg-info view-book" data-book-id="${row.id}" data-toggle="modal" data-target="#BookViewModal">`,
+                        `       <i class="fas fa-eye"></i> ${l('View')}`,
+                        '   </button>',
                         `   <button type="button" class="btn btn-sm bg-secondary edit-book" data-book-id="${row.id}" data-toggle="modal" data-target="#BookUpdateModal">`,
                         `       <i class="fas fa-pencil-alt"></i> ${l('Edit')}`,
                         '   </button>',
@@ -120,6 +128,13 @@
         e.preventDefault();
 
         var bookId = $(this).data('book-id');
+
+        $('#BookUpdateModal').one('shown.bs.modal', function () {
+            loadBookImages(bookId);
+            loadBookImagesAsLinks(bookId);
+
+        });
+
         var $editionSelect = $('#selectEdition');
 
         _bookService.getBook(bookId).done(function (book) {
@@ -129,14 +144,15 @@
             $('#BookUpdateModal textarea[name="Description"]').val(book.description);
 
             loadGenres('#BookUpdateModal', book.genre);
-            $editionSelect.empty().append('<option value="">-- Select an edition --</option>');
+            $editionSelect.empty().append(`<option value="">-- ${l("SelectAnEdition")} --</option>`);
 
             if (book.editions) {
                 book.editions.forEach(ed => {
-                    const formatName = ed.format === 0 ? 'Hardcover' : 'Paperback';
+                    const formatValue = ed.format;
+                    const formatName = ed.format === 0 ? l('Hardcover') : l('Paperback');
                     $editionSelect.append(
                         `<option value="${ed.id}"
-                        data-format="${formatName}"
+                        data-format="${formatValue}"
                         data-isbn="${ed.isbn}"
                         data-publisher="${ed.publisher}"
                         data-publisheddate="${ed.publishedDate}">
@@ -338,10 +354,10 @@
             const genres = await _bookService.getBookGenre();
 
             const $genreSelect = $(`${modalSelector} select[name="Genre"]`);
-            $genreSelect.empty(); // clear old options
+            $genreSelect.empty();
 
             // Add placeholder
-            $genreSelect.append('<option value="">-- Select Genre --</option>');
+            $genreSelect.append(`<option value="">-- ${l('SelectGenre')} --</option>`);
 
             // Populate genre options
             genres.forEach(g => {
@@ -358,9 +374,64 @@
         } catch (err) {
             console.error('Failed to load genres', err);
             $(`${modalSelector} select[name="Genre"]`)
-                .html('<option value="">Failed to load genres</option>');
+                .html(`<option value="">${l('FailedToLoadGenres')}</option>`);
         }
     }
+
+    function loadBookImages(bookId) {
+        _bookService.getBookImages(bookId).done(function (images) {
+            console.log(images); // should log array
+
+            if (!images || !images.length) return;
+
+            const $preview = $('#imagePreview');
+            $preview.empty();
+
+            images.forEach(img => {
+                const $col = $(`
+                <div class="col-6 mb-3">
+                    <div class="card">
+                        <img src="${img.imagePath}" class="card-img-top" style="height:150px; object-fit:cover;" />
+                        <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                            <span class="small text-truncate" style="max-width: 120px;">${img.caption || ''}</span>
+                            <button type="button" class="btn btn-sm btn-danger ml-auto">×</button>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+                $col.find('button').on('click', function () {
+                    $col.remove();
+                });
+
+                $preview.append($col);
+            });
+        });
+    }
+
+    function loadBookImagesAsLinks(bookId) {
+        _bookService.getBookImages(bookId).done(function (images) {
+            console.log(images); // confirm array
+
+            if (!images || !images.length) {
+                $('#imageLinks').html('<p>No images found for this book.</p>');
+                return;
+            }
+
+            const $links = $('#imageLinks');
+            $links.empty();
+
+            images.forEach(img => {
+                const $a = $(`
+                <div class="mb-2">
+                    <a href="${img.imagePath}" target="_blank">${img.caption || img.imagePath}</a>
+                </div>
+            `);
+                $links.append($a);
+            });
+        });
+    }
+
 
     //Import
     //$(document).on('click', '.btn-import-books', function (e) {

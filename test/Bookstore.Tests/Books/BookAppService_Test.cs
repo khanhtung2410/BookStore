@@ -1,9 +1,12 @@
-﻿using Abp.UI;
+﻿using Abp.Application.Services.Dto;
+using Abp.Domain.Repositories;
+using Abp.UI;
 using Bookstore.Books;
 using Bookstore.Books.Dto;
 using Bookstore.Entities.Books;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -244,5 +247,62 @@ namespace Bookstore.Tests.Books
             updated.Title.ShouldBe("Test Update Book (Updated)");
             updated.Editions.Count.ShouldBe(2);
         }
+
+        [Fact]
+        public async Task GetBookImagesAsync_ShouldReturnImages_WhenBookExists()
+        {
+            // Arrange: create a book with images
+            var bookId = await _bookAppService.CreateBook(new CreateBookDto
+            {
+                Title = "Integration Test Book",
+                Author = "Tester",
+                Genre = BookConsts.Genre.Fantasy,
+                Description = "Testing images",
+                Editions = new[]
+                {
+                    new CreateBookEditionDto
+                    {
+                        Format = BookConsts.Format.Hardcover,
+                        Publisher = "Test Publisher",
+                        ISBN = "1234567890",
+                        PublishedDate = System.DateTime.Now
+                    }
+                }.ToList()
+            });
+
+            // Add images directly via repository
+            await UsingDbContextAsync(async context =>
+            {
+                context.BookImages.Add(new Entities.Books.BookImage
+                {
+                    BookId = bookId,
+                    ImagePath = "/uploads/books/test1.jpg",
+                    Caption = "Image 1",
+                    DisplayOrder = 0,
+                    IsCover = true
+                });
+
+                context.BookImages.Add(new Entities.Books.BookImage
+                {
+                    BookId = bookId,
+                    ImagePath = "/uploads/books/test2.jpg",
+                    Caption = "Image 2",
+                    DisplayOrder = 1,
+                    IsCover = false
+                });
+
+                await context.SaveChangesAsync();
+            });
+
+            // Act
+            var result = await _bookAppService.GetBookImagesAsync(bookId);
+
+            // Assert
+            result.ShouldNotBeNull();
+            result.Items.Count.ShouldBe(2);
+            result.Items.First().ImagePath.ShouldBe("/uploads/books/test1.jpg");
+        }
     }
 }
+
+    

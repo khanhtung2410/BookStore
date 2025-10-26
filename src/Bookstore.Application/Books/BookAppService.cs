@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
+using Abp.Localization;
 using Abp.UI;
 using Bookstore.Books.Dto;
 using Bookstore.Entities.Books;
@@ -24,23 +25,30 @@ namespace Bookstore.Books
         private readonly IRepository<BookEdition, int> _bookEditionRepository;
         private readonly IRepository<BookImage, int> _bookImageRepository;
         private readonly IWebHostEnvironment _env;
+        private readonly ILocalizationManager _localizationManager;
 
         public BookAppService(
-            IRepository<Book, int> bookRepository, IRepository<BookInventory, int> bookInventoryRepository
-            , IRepository<BookEdition, int> bookEditionRepository, IRepository<BookImage, int> bookImageRepository,
-            IWebHostEnvironment env)
+            IRepository<Book, int> bookRepository, 
+            IRepository<BookInventory, int> bookInventoryRepository, 
+            IRepository<BookEdition, int> bookEditionRepository, 
+            IRepository<BookImage, int> bookImageRepository,
+            IWebHostEnvironment env,
+            ILocalizationManager localizationManager)
         {
             _bookRepository = bookRepository;
             _bookInventoryRepository = bookInventoryRepository;
             _bookEditionRepository = bookEditionRepository;
             _bookImageRepository = bookImageRepository;
             _env = env;
+            _localizationManager = localizationManager;
+
+            LocalizationSourceName = BookstoreConsts.LocalizationSourceName;
         }
         [Abp.Authorization.AbpAuthorize("Pages.Books.Create")]
         public async Task<int> CreateBook(CreateBookDto input)
         {
             if (input.Editions == null || !input.Editions.Any())
-                throw new UserFriendlyException("A book must have at least one edition.");
+                throw new UserFriendlyException(L("BookMustHaveAtLeastOneEdition"));
 
             var existingBook = await _bookRepository
                 .FirstOrDefaultAsync(b => b.Title == input.Title && b.Author == input.Author);
@@ -67,11 +75,11 @@ namespace Bookstore.Books
                 var existingEdition = await _bookEditionRepository.FirstOrDefaultAsync(e => e.ISBN == editionDto.ISBN);
                 if (existingEdition != null)
                 {
-                    throw new UserFriendlyException($"The ISBN '{editionDto.ISBN}' already exists for another book edition.");
+                    throw new UserFriendlyException(L("DuplicateISBN", editionDto.ISBN));
                 }
                 if (editionDto.PublishedDate > DateTime.Now.AddYears(1))
                 {
-                    throw new UserFriendlyException("$The Published Date cannot be more than one year from now");
+                    throw new UserFriendlyException(L("InvalidPublishedDateFuture"));
                 }
                 var edition = new BookEdition(
                     createdBookId,
@@ -180,12 +188,12 @@ namespace Bookstore.Books
                 .FirstOrDefaultAsync(b => b.Id == bookId);
 
             if (book == null)
-                throw new UserFriendlyException("Book not found.");
+                throw new UserFriendlyException(L("BookNotFound"));
 
             // Find the specific edition
             var edition = book.Editions.FirstOrDefault(e => e.Id == bookEditionId);
             if (edition == null)
-                throw new UserFriendlyException("Book edition not found.");
+                throw new UserFriendlyException(L("BookEditionNotFound"));
 
             var bookDto = new BookDto
             {
@@ -227,7 +235,7 @@ namespace Bookstore.Books
                 .FirstOrDefaultAsync(b => b.Id == input.Id);
 
             if (book == null)
-                throw new UserFriendlyException("Book not found");
+                throw new UserFriendlyException(L("BookNotFound"));
 
             // Update main book fields
             book.Title = input.Title;
@@ -267,18 +275,18 @@ namespace Bookstore.Books
 
                     if (duplicate != null)
                     {
-                        throw new UserFriendlyException($"Another edition with ISBN {editionInput.ISBN} already exists.");
+                        throw new UserFriendlyException(L("DuplicateISBN", editionInput.ISBN));
                     }
 
                     if (string.IsNullOrWhiteSpace(edition.ISBN))
-                        throw new UserFriendlyException("ISBN cannot be empty.");
+                        throw new UserFriendlyException(L("EmptyISBN"));
 
                     if (!System.Text.RegularExpressions.Regex.IsMatch(edition.ISBN, @"^\d+$"))
-                        throw new UserFriendlyException($"ISBN '{edition.ISBN}' is invalid. It must contain only digits (0-9).");
+                        throw new UserFriendlyException(L("InvalidISBNFormat", editionInput.ISBN));
 
                     var publishedDate = editionInput.PublishedDate ?? DateTime.Now;
                     if (publishedDate > DateTime.Now.AddYears(1))
-                        throw new UserFriendlyException($"The published date ({publishedDate:yyyy-MM-dd}) cannot be more than one year in the future.");
+                        throw new UserFriendlyException(L("InvalidPublishedDateFuture"));
 
 
                     edition.Format = editionInput.Format;
@@ -296,7 +304,7 @@ namespace Bookstore.Books
 
                     if (existingEdition != null)
                     {
-                        throw new UserFriendlyException($"An edition with ISBN {editionInput.ISBN} already exists.");
+                        throw new UserFriendlyException(L("DuplicateISBN", editionInput.ISBN));
                     }
 
                     edition = new BookEdition(
@@ -318,22 +326,28 @@ namespace Bookstore.Books
 
         public async Task<List<SelectListItemDto>> GetBookGenreAsync()
         {
-            return Enum.GetValues(typeof(BookConsts.Genre))
-           .Cast<BookConsts.Genre>()
-           .Select(g => new SelectListItemDto
-           {
-               Value = ((int)g).ToString(),
-               Text = g.ToString()
-           }).ToList();
+            var L = _localizationManager.GetSource(BookstoreConsts.LocalizationSourceName);
+
+            var list = Enum.GetValues(typeof(BookConsts.Genre))
+                .Cast<BookConsts.Genre>()
+                .Select(g => new SelectListItemDto
+                {
+                    Value = ((int)g).ToString(),
+                    Text = L.GetString($"Genre_{g}")
+                })
+                .ToList();
+
+            return await Task.FromResult(list);
         }
+
         public async Task<List<BookImageDto>> UploadBookImagesAsync([FromForm] int bookId, [FromForm] List<IFormFile> files, [FromForm] bool isCover = false)
         {
             var book = await _bookRepository.FirstOrDefaultAsync(bookId);
             if (book == null)
-                throw new UserFriendlyException("Book not found");
+                throw new UserFriendlyException(L("BookNotFound"));
 
             if (files == null || !files.Any())
-                throw new UserFriendlyException("No files provided");
+                throw new UserFriendlyException(L("NoFilesProvided"));
 
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
             var uploadPath = Path.Combine(_env.WebRootPath, "uploads", "books", bookId.ToString());
@@ -346,9 +360,9 @@ namespace Bookstore.Books
             {
                 var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
                 if (!allowedExtensions.Contains(extension))
-                    throw new UserFriendlyException($"Invalid image format for '{file.FileName}'. Allowed: JPG, JPEG, PNG, WEBP.");
+                    throw new UserFriendlyException(L("InvalidImageFormat", file.FileName));
                 if (!file.ContentType.StartsWith("image/"))
-                    throw new UserFriendlyException("Invalid image file type.");
+                    throw new UserFriendlyException(L("InvalidImageFileType"));
 
                 var fileName = $"{Guid.NewGuid()}{extension}";
                 var filePath = Path.Combine(uploadPath, fileName);
@@ -380,6 +394,26 @@ namespace Bookstore.Books
             await CurrentUnitOfWork.SaveChangesAsync();
             return uploadedImages;
         }
+        public async Task<List<BookImageDto>> GetBookImagesAsync(int bookId)
+        {
+            var book = await _bookRepository.FirstOrDefaultAsync(bookId);
+            if (book == null)
+                throw new UserFriendlyException(L("BookNotFound"));
 
+            var images = await _bookImageRepository
+                .GetAll()
+                .Where(i => i.BookId == bookId)
+                .OrderBy(i => i.DisplayOrder)
+                .ToListAsync();
+
+            return images.Select(i => new BookImageDto
+            {
+                BookId = i.BookId,
+                ImagePath = i.ImagePath,
+                Caption = i.Caption,
+                DisplayOrder = i.DisplayOrder,
+                IsCover = i.IsCover
+            }).ToList();
+        }
     }
 }

@@ -154,7 +154,7 @@
                                         <th>@L("Title")</th>
                                         <th>@L("Author")</th>
                                         <th>@L("Genre")</th>
-                                        <th style="width: 150px">@L("Actions")</th>
+                                        <th style="width: 200px">@L("Actions")</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -170,7 +170,7 @@
 @await Html.PartialAsync("~/Views/Books/_ImportModal.cshtml")
 @await Html.PartialAsync("~/Views/Books/_CreateModal.cshtml", new Bookstore.Web.Models.Books.BookCreateViewModel())
 @await Html.PartialAsync("~/Views/Books/_UpdateModal.cshtml", new Bookstore.Web.Models.Books.BookUpdateViewModel())
-
+@await Html.PartialAsync("~/Views/Books/_DetailModal.cshtml", new Bookstore.Web.Models.Books.BookDetailViewModel())
 @section Scripts {
 
 

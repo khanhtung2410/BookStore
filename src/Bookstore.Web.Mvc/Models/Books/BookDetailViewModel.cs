@@ -1,4 +1,5 @@
-﻿using Bookstore.Entities.Books;
+﻿using Bookstore.Books.Dto;
+using Bookstore.Entities.Books;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ namespace Bookstore.Web.Models.Books
         public string Description { get; set; }
         public IEnumerable<SelectListItem> GenreList { get; set; }
         public List<BookEditionViewModel> Editions { get; set; } = new List<BookEditionViewModel>();
+        public List<BookImageViewModel>? Images { get; set; } = new();
     }
 
     public class BookEditionViewModel
