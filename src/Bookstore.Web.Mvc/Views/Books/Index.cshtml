@@ -6,113 +6,6 @@
     ViewBag.Title = "Books List";
     ViewBag.CurrentPageName = "Books";
 }
-@* @if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-warning alert-dismissible fade show d-flex justify-content-between align-items-center"
-         role="alert">
-        <span>@TempData["ErrorMessage"]</span>
-        <button type="button"
-                class="btn-close btn-close-white ms-3"
-                data-bs-dismiss="alert"
-                aria-label="Close"
-                style="font-size: 1.2rem; opacity: 1;">
-            x
-        </button>
-    </div>
-}
-<div class="container mt-5">
-    <h1 class="mb-4">Books</h1>
-    <button class="btn btn-primary mb-4 btn-import">Import Book</button>
-    <a href="@Url.Action("Index", "Carts")" class="btn btn-primary mb-4 btn-view-cart">
-        View Cart
-    </a>
-    @if (Model.Books != null && Model.Books.Any())
-    {
-        <div class="list-group shadow-sm">
-            @foreach (var book in Model.Books)
-            {
-                <div class="list-group-item list-group-item-action mb-3 rounded-3 border border-secondary">
-                    <div class="row align-items-center">
-                        <!-- Optional book image -->
-                        <div class="col-md-2 text-center">
-                            <img src="~/img/Books/PlaceHolder/No-Image-Placeholder.svg" alt="@book.Title" class="img-fluid rounded" style="max-height: 150px;">
-                        </div>
-
-                        <div class="col-md-8">
-                            <h5 class="fw-bold mb-1">@book.Title</h5>
-                            <p class="mb-1 text-muted"><strong>Author:</strong> @book.Author</p>
-                            <p class="mb-1"><strong>Genre:</strong> @book.Genre</p>
-                        </div>
-
-                        <div class="col-md-2 text-end">
-                            <a href="@Url.Action("Detail", "Books", new { id = book.Id })" class="btn btn-primary btn-sm mb-2 w-100">
-                                View Details
-                            </a>
-                            <a href="@Url.Action("Update", "Books", new { id = book.Id })" class="btn btn-success btn-sm w-100">
-                                Update
-                            </a>
-                            <button type="button"
-                                    class="btn btn-danger btn-sm mt-2 w-100 btn-delete-book"
-                                    data-id="@book.Id"
-                                    data-title="@book.Title">
-                                <i class="bi bi-trash"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-
-        <!-- Pagination -->
-        @if (Model.TotalPages > 1)
-        {
-            <nav aria-label="Book pages" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" href="@Url.Action("Index", "Books", new { page = 1 })">« First</a>
-                    </li>
-                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" href="@Url.Action("Index", "Books", new { page = Model.CurrentPage - 1 })">‹ Prev</a>
-                    </li>
-
-                    @{
-                        int startPage = Math.Max(1, Model.CurrentPage - 2);
-                        int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
-
-                        if (startPage > 1)
-                        {
-                            <li class="page-item disabled"><span class="page-link">...</span></li>
-                        }
-
-                        for (int i = startPage; i <= endPage; i++)
-                        {
-                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                                <a class="page-link" href="@Url.Action("Index", "Books", new { page = i })">@i</a>
-                            </li>
-                        }
-
-                        if (endPage < Model.TotalPages)
-                        {
-                            <li class="page-item disabled"><span class="page-link">...</span></li>
-                        }
-                    }
-
-                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link" href="@Url.Action("Index", "Books", new { page = Model.CurrentPage + 1 })">Next ›</a>
-                    </li>
-                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link" href="@Url.Action("Index", "Books", new { page = Model.TotalPages })">Last »</a>
-                    </li>
-                </ul>
-            </nav>
-        }
-    }
-    else
-    {
-        <div class="alert alert-info mt-4">
-            No books available.
-        </div>
-    }*@
 <section class="content-header">
     <div class="container-fluid">
         <div class="row">
@@ -124,7 +17,7 @@
                     <i class="fa fa-plus-square"></i> @L("Create")
                 </a>
                 <a href="javascript:;" data-toggle="modal" data-target="#BooksImportModal" class="btn bg-blue">
-                    <i class="fa fa-file"></i> @L("Import")
+                    <i class="fa fa-file"></i> @L("ImportBooks")
                 </a>
             </div>
         </div>

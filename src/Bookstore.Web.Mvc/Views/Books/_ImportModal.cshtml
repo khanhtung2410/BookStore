@@ -8,24 +8,24 @@
             <!-- Modal Header -->
             @await Html.PartialAsync(
             "~/Views/Shared/Modals/_ModalHeader.cshtml",
-                        new ModalHeaderViewModel(L("ImportBook"))
+                        new ModalHeaderViewModel(L("ImportBooks"))
                         )
 
             <!-- Modal Body -->
             <div class="modal-body">
                 <form id="importForm" method="post" enctype="multipart/form-data" role="form" action="/Books/ImportExcel">
                     <div class="mb-4">
-                        <label for="ExcelFile" class="form-label fw-bold">Select Excel File</label>
+                        <label for="ExcelFile" class="form-label fw-bold">@L("SelectExcelFile")</label>
                         <input type="file" class="form-control form-control-lg" id="ExcelFile" name="ExcelFile" required>
-                        <small class="text-muted">Only .xls or .xlsx files are supported.</small>
+                        <small class="text-muted">@L("OnlyExcelFilesAreSupported").</small>
                     </div>
 
                     <div class="d-flex justify-content-between">
                         <button type="button" class="btn btn-outline-secondary" id="getFormatExcel">
-                            <i class="bi bi-file-earmark-arrow-down me-2"></i> Get Excel Template
+                            <i class="bi bi-file-earmark-arrow-down me-2"></i> @L("GetExcelTemplate")
                         </button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-upload me-2"></i> Import
+                            <i class="bi bi-upload me-2"></i> @L("Import")
                         </button>
                     </div>
                 </form>

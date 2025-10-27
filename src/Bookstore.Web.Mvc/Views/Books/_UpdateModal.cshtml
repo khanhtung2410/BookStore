@@ -5,7 +5,7 @@
 @{
     Layout = null;
 }
-<div class="modal fade" id="BookUpdateModal" tabindex="-1" aria-labelledby="BookUpdateModalLabel" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="BookUpdateModal" tabindex="-1" aria-labelledby="BookUpdateModalLabel" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             @await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(L("UpdateBook")))
@@ -63,7 +63,6 @@
                                 <div class="col-md-9" id="imagesContainer">
                                     <input type="file" id="bookImages" multiple class="form-control-file" />
                                     <div id="imagePreview" class="row mt-2"></div>
-                                    <div id="imageLinks" class="mt-2"></div>
                                 </div>  
                             </div>
                         </div>

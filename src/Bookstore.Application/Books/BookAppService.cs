@@ -49,6 +49,42 @@ namespace Bookstore.Books
         {
             if (input.Editions == null || !input.Editions.Any())
                 throw new UserFriendlyException(L("BookMustHaveAtLeastOneEdition"));
+            if (string.IsNullOrWhiteSpace(input.Title))
+            {
+                throw new UserFriendlyException(L("TitleIsRequired"));
+            }
+            if (input.Title.Length > 250)
+            {
+                throw new UserFriendlyException(L("TitleMaxLengthExceeded", L("Title"), 250));
+            }
+
+            if (string.IsNullOrWhiteSpace(input.Author))
+            {
+                throw new UserFriendlyException(L("AuthorIsRequired"));
+            }
+            if (input.Author.Length > 200)
+            {
+                throw new UserFriendlyException(L("AuthorMaxLengthExceeded", L("Author"), 200));
+            }
+
+            if (string.IsNullOrWhiteSpace(input.Description))
+            {
+                throw new UserFriendlyException(L("DescriptionIsRequired"));
+            }
+            if (input.Description.Length > 1000)
+            {
+                throw new UserFriendlyException(L("DescriptionMaxLengthExceeded", L("Description"), 1000));
+            }
+
+            if (!Enum.IsDefined(typeof(BookConsts.Genre), input.Genre))
+            {
+                throw new UserFriendlyException(L("InvalidGenre"));
+            }
+
+            if (input.Editions == null || !input.Editions.Any())
+            {
+                throw new UserFriendlyException(L("BookMustHaveAtLeastOneEdition"));
+            }
 
             var existingBook = await _bookRepository
                 .FirstOrDefaultAsync(b => b.Title == input.Title && b.Author == input.Author);
@@ -72,14 +108,45 @@ namespace Bookstore.Books
 
             foreach (var editionDto in input.Editions)
             {
+                if (!Enum.IsDefined(typeof(BookConsts.Format), editionDto.Format))
+                {
+                    throw new UserFriendlyException(L("InvalidFormat"));
+                }
+                if (string.IsNullOrWhiteSpace(editionDto.ISBN))
+                {
+                    throw new UserFriendlyException(L("ISBNIsRequired"));
+                }
+
+                if (!editionDto.ISBN.All(char.IsDigit))
+                {
+                    throw new UserFriendlyException(L("InvalidISBNFormat", editionDto.ISBN));
+                }
+                if (editionDto.ISBN.Length != 10 && editionDto.ISBN.Length != 13)
+                {
+                    throw new UserFriendlyException(L("InvalidISBNLength", editionDto.ISBN));
+                }
+
                 var existingEdition = await _bookEditionRepository.FirstOrDefaultAsync(e => e.ISBN == editionDto.ISBN);
                 if (existingEdition != null)
                 {
                     throw new UserFriendlyException(L("DuplicateISBN", editionDto.ISBN));
                 }
+
+                if (editionDto.PublishedDate == null)
+                {
+                    throw new UserFriendlyException(L("PublishedDateIsRequired"));
+                }
                 if (editionDto.PublishedDate > DateTime.Now.AddYears(1))
                 {
                     throw new UserFriendlyException(L("InvalidPublishedDateFuture"));
+                }
+                if (string.IsNullOrWhiteSpace(editionDto.Publisher))
+                {
+                    throw new UserFriendlyException(L("PublisherIsRequired"));
+                }
+                if (editionDto.Publisher.Length > 200)
+                {
+                    throw new UserFriendlyException(L("PublisherMaxLengthExceeded", L("Publisher"), 200));
                 }
                 var edition = new BookEdition(
                     createdBookId,
@@ -93,6 +160,18 @@ namespace Bookstore.Books
                 // For each Edition, create its Inventory if exist
                 if (editionDto.Inventory != null)
                 {
+                    if (editionDto.Inventory.BuyPrice < 0)
+                    {
+                        throw new UserFriendlyException(L("BuyPriceNonNegative"));
+                    }
+                    if (editionDto.Inventory.SellPrice < 0)
+                    {
+                        throw new UserFriendlyException(L("SellPriceNonNegative"));
+                    }
+                    if (editionDto.Inventory.StockQuantity < 0)
+                    {
+                        throw new UserFriendlyException(L("StockQuantityNonNegative"));
+                    }
                     var inventory = new BookInventory(
                         editionId,
                         editionDto.Inventory.BuyPrice,
@@ -236,6 +315,17 @@ namespace Bookstore.Books
 
             if (book == null)
                 throw new UserFriendlyException(L("BookNotFound"));
+            if (string.IsNullOrWhiteSpace(input.Title) || input.Title.Length > 250)
+                throw new UserFriendlyException(L("TitleIsRequiredOrTooLong"));
+
+            if (string.IsNullOrWhiteSpace(input.Author) || input.Author.Length > 200)
+                throw new UserFriendlyException(L("AuthorIsRequiredOrTooLong"));
+
+            if (!string.IsNullOrEmpty(input.Description) && input.Description.Length > 1000)
+                throw new UserFriendlyException(L("DescriptionTooLong"));
+
+            if (!Enum.IsDefined(typeof(BookConsts.Genre), input.Genre))
+                throw new UserFriendlyException(L("InvalidGenre"));
 
             // Update main book fields
             book.Title = input.Title;
@@ -278,16 +368,24 @@ namespace Bookstore.Books
                         throw new UserFriendlyException(L("DuplicateISBN", editionInput.ISBN));
                     }
 
-                    if (string.IsNullOrWhiteSpace(edition.ISBN))
+                    if (string.IsNullOrWhiteSpace(editionInput.ISBN))
                         throw new UserFriendlyException(L("EmptyISBN"));
 
-                    if (!System.Text.RegularExpressions.Regex.IsMatch(edition.ISBN, @"^\d+$"))
+                    if(editionInput.ISBN.Length != 10 && editionInput.ISBN.Length != 13)
+                        throw new UserFriendlyException(L("InvalidISBNLength", editionInput.ISBN));
+
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(editionInput.ISBN, @"^\d+$"))
                         throw new UserFriendlyException(L("InvalidISBNFormat", editionInput.ISBN));
 
                     var publishedDate = editionInput.PublishedDate ?? DateTime.Now;
                     if (publishedDate > DateTime.Now.AddYears(1))
                         throw new UserFriendlyException(L("InvalidPublishedDateFuture"));
+                   
+                    if (string.IsNullOrWhiteSpace(editionInput.Publisher) || editionInput.Publisher.Length > 200)
+                        throw new UserFriendlyException(L("PublisherIsRequiredOrTooLong"));
 
+                    if (!Enum.IsDefined(typeof(BookConsts.Format), editionInput.Format))
+                        throw new UserFriendlyException(L("InvalidBookFormat"));
 
                     edition.Format = editionInput.Format;
                     edition.Publisher = editionInput.Publisher;
@@ -306,6 +404,25 @@ namespace Bookstore.Books
                     {
                         throw new UserFriendlyException(L("DuplicateISBN", editionInput.ISBN));
                     }
+                    if (string.IsNullOrWhiteSpace(editionInput.ISBN))
+                        throw new UserFriendlyException(L("EmptyISBN"));
+
+                    if (editionInput.ISBN.Length != 10 && editionInput.ISBN.Length != 13)
+                        throw new UserFriendlyException(L("InvalidISBNLength", editionInput.ISBN));
+
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(editionInput.ISBN, @"^\d+$"))
+                        throw new UserFriendlyException(L("InvalidISBNFormat", editionInput.ISBN));
+
+                    var publishedDate = editionInput.PublishedDate ?? DateTime.Now;
+                    if (publishedDate > DateTime.Now.AddYears(1))
+                        throw new UserFriendlyException(L("InvalidPublishedDateFuture"));
+
+                    if (string.IsNullOrWhiteSpace(editionInput.Publisher) || editionInput.Publisher.Length > 200)
+                        throw new UserFriendlyException(L("PublisherIsRequiredOrTooLong"));
+
+                    if (!Enum.IsDefined(typeof(BookConsts.Format), editionInput.Format))
+                        throw new UserFriendlyException(L("InvalidBookFormat"));
+
 
                     edition = new BookEdition(
                         book.Id,
@@ -348,7 +465,8 @@ namespace Bookstore.Books
 
             if (files == null || !files.Any())
                 throw new UserFriendlyException(L("NoFilesProvided"));
-
+            if(files.Count > 10)
+                throw new UserFriendlyException(L("MaxTenImagesAllowed"));
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
             var uploadPath = Path.Combine(_env.WebRootPath, "uploads", "books", bookId.ToString());
             Directory.CreateDirectory(uploadPath);
@@ -408,6 +526,7 @@ namespace Bookstore.Books
 
             return images.Select(i => new BookImageDto
             {
+                Id = i.Id,
                 BookId = i.BookId,
                 ImagePath = i.ImagePath,
                 Caption = i.Caption,
@@ -415,5 +534,20 @@ namespace Bookstore.Books
                 IsCover = i.IsCover
             }).ToList();
         }
+        [Abp.Authorization.AbpAuthorize("Pages.Books.Update")]
+        public async Task DeleteBookImages(DeleteBookImagesDto input)
+        {
+            foreach (var id in input.Ids)
+            {
+                var image = await _bookImageRepository.FirstOrDefaultAsync(id);
+                if (image != null)
+                {
+                    var path = Path.Combine(_env.WebRootPath, image.ImagePath.TrimStart('/'));
+                    if (File.Exists(path)) File.Delete(path);
+                    await _bookImageRepository.DeleteAsync(image);
+                }
+            }
+        }
+
     }
 }
