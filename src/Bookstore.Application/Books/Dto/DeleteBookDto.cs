@@ -9,7 +9,6 @@ namespace Bookstore.Books.Dto
 {
     public class DeleteBookDto
     {
-        [Required]
         public int Id { get; set; }
     }
 }

@@ -9,6 +9,7 @@ namespace Bookstore.Books.Dto
 {
     public class BookImageDto
     {
+        public int Id { get; set; }
         [Required]
         public int BookId { get; set; }
         public string ImagePath { get; set; }   
@@ -24,4 +25,9 @@ namespace Bookstore.Books.Dto
         public int DisplayOrder { get; set; }
         public bool IsCover { get; set; }
     }
+    public class DeleteBookImagesDto
+    {
+        public List<int> Ids { get; set; }
+    }
+
 }
