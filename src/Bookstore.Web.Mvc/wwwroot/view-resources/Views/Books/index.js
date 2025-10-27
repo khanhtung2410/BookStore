@@ -83,8 +83,8 @@
 
     //Delete book
     $(document).on('click', '.delete-book', function () {
-        var bookId = $(this).attr('data-book-id');
-        var bookTitle = $(this).attr('data-book-title');
+        var bookId = $(this).data('book-id');
+        var bookTitle = $(this).data('book-title');
         deleteBook(bookId, bookTitle);
     })
     function deleteBook(bookId, bookTitle) {
@@ -124,16 +124,10 @@
         }
     });
     //Update
+    window.allEditions = [];
     $(document).on('click', '.edit-book', function (e) {
         e.preventDefault();
-
         var bookId = $(this).data('book-id');
-
-        $('#BookUpdateModal').one('shown.bs.modal', function () {
-            loadBookImages(bookId);
-            loadBookImagesAsLinks(bookId);
-
-        });
 
         var $editionSelect = $('#selectEdition');
 
@@ -143,57 +137,183 @@
             $('#BookUpdateModal input[name="Author"]').val(book.author);
             $('#BookUpdateModal textarea[name="Description"]').val(book.description);
 
+            var $modal = $('#BookUpdateModal');
+            loadBookImages(bookId, $modal);
             loadGenres('#BookUpdateModal', book.genre);
+
+            window.allEditions = book.editions || [];
+
             $editionSelect.empty().append(`<option value="">-- ${l("SelectAnEdition")} --</option>`);
 
-            if (book.editions) {
-                book.editions.forEach(ed => {
-                    const formatValue = ed.format;
-                    const formatName = ed.format === 0 ? l('Hardcover') : l('Paperback');
-                    $editionSelect.append(
-                        `<option value="${ed.id}"
-                        data-format="${formatValue}"
-                        data-isbn="${ed.isbn}"
-                        data-publisher="${ed.publisher}"
+            window.allEditions.forEach(ed => {
+                const formatValue = ed.format;
+                const formatName = ed.format === 0 ? l('Hardcover') : l('Paperback');
+                $editionSelect.append(
+                    `<option value="${ed.id}" 
+                        data-format="${formatValue}" 
+                        data-isbn="${ed.isbn}" 
+                        data-publisher="${ed.publisher}" 
                         data-publisheddate="${ed.publishedDate}">
-                        ${formatName} - ${ed.isbn}
-                    </option>`
-                    );
-                });
+                ${formatName} - ${ed.isbn}</option>`);
+            });
 
-                // Auto-select the first edition and trigger change to fill details
-                $editionSelect.val(book.editions[0].id).trigger('change');
+            // Auto-select the first edition and trigger change to fill details
+            if (window.allEditions.length > 0) {
+                $editionSelect.val(allEditions[0].id).trigger('change');
             }
         });
     });
 
     $('#selectEdition').on('change', function () {
-        const selectedOption = $(this).find('option:selected');
-        if (!selectedOption.val()) {
-            // Clear fields if no selection
-            $('#editionFields #format').val('');
-            $('#editionFields #isbn').val('');
-            $('#editionFields #publisher').val('');
-            $('#editionFields #publishedDate').val('');
+        const selectedId = parseInt($(this).val(), 10);
+        const selectedEdition = window.allEditions.find(ed => ed.id === selectedId);
+
+        if (!selectedEdition) {
+            $('#format,#isbn,#publisher,#publishedDate').val('');
             return;
         }
 
-        $('#editionFields #format').val(selectedOption.data('format'));
-        $('#editionFields #isbn').val(selectedOption.data('isbn'));
-        $('#editionFields #publisher').val(selectedOption.data('publisher'));
+        $('#format').val(selectedEdition.format);
+        $('#isbn').val(selectedEdition.isbn);
+        $('#publisher').val(selectedEdition.publisher);
 
-        const rawDate = selectedOption.data('publisheddate'); // "2017-12-11T00:00:00"
-        const dateOnly = rawDate ? rawDate.split('T')[0] : '';
-        $('#editionFields #publishedDate').val(dateOnly);
+        const dateOnly = selectedEdition.publishedDate ? selectedEdition.publishedDate.split('T')[0] : '';
+        $('#publishedDate').val(dateOnly);
+
+        // optional: update hidden input for save
+        $('#SelectedEditionId').val(selectedId);
     });
+
 
     abp.event.on('book.edited', (data) => {
         _$booksTable.ajax.reload();
     })
 
     // Create
+
+    // Custom rule for ISBN length
+    $.validator.addMethod("isbnLength", function (value, element) {
+        return this.optional(element) || value.length === 10 || value.length === 13;
+    }, l('InvalidISBNFormat', ''));
+
+    _$form.validate({
+        ignore: [], // include hidden fields for edition validation
+        rules: {
+            Title: {
+                required: true,
+                maxlength: 250
+            },
+            Author: {
+                required: true,
+                maxlength: 200
+            },
+            Description: {
+                required: true,
+                maxlength: 1000
+            },
+            Genre: {
+                required: true
+            },
+            'Editions[0].Format': {
+                required: true
+            },
+            'Editions[0].Publisher': {
+                required: true,
+                maxlength: 200
+            },
+            'Editions[0].ISBN': {
+                required: true,
+                digits: true,
+                isbnLength: true
+            },
+            'Editions[0].PublishedDate': {
+                required: true,
+                dateISO: true,
+                max: function () {
+                    var today = new Date();
+                    today.setFullYear(today.getFullYear() + 1);
+                    return today.toISOString().split('T')[0];
+                }
+            },
+            'BuyPrice': {
+                required: false,
+                number: true,
+                min: 0
+            },
+            'SellPrice': {
+                required: false,
+                number: true,
+                min: 0
+            },
+            'StockQuantity': {
+                required: false,
+                number: true,
+                min: 0
+            }
+        },
+        messages: {
+            Title: {
+                required: l('TitleIsRequired'),
+                maxlength: l('TitleMaxLengthExceeded', l('Title'), 250)
+            },
+            Author: {
+                required: l('AuthorIsRequired'),
+                maxlength: l('AuthorMaxLengthExceeded', l('Author'), 200)
+            },
+            Description: {
+                required: l('DescriptionIsRequired'),
+                maxlength: l('DescriptionMaxLengthExceeded', l('Description'), 1000)
+            },
+            Genre: {
+                required: l('GenreIsRequired')
+            },
+            'Editions[0].Format': {
+                required: l('FormatIsRequired')
+            },
+            'Editions[0].Publisher': {
+                required: l('PublisherIsRequired'),
+                maxlength: l('PublisherMaxLengthExceeded', l('Publisher'), 200)
+            },
+            'Editions[0].ISBN': {
+                required: l('ISBNIsRequired'),
+                digits: l('InvalidISBNFormat', ''),
+            },
+            'Editions[0].PublishedDate': {
+                required: l('PublishedDateIsRequired'),
+                dateISO: l('InvalidPublishedDateFuture')
+            },
+            'BuyPrice': {
+                min: l('BuyPriceNonNegative')
+            },
+            'SellPrice': {
+                min: l('SellPriceNonNegative')
+            },
+            'StockQuantity': {
+                min: l('StockQuantityNonNegative')
+            }
+        },
+        errorPlacement: function (error, element) {
+            if (element.closest('.edition-item').length) {
+                error.appendTo(element.closest('.edition-item'));
+            } else {
+                error.insertAfter(element);
+            }
+        },
+        highlight: function (element) {
+            $(element).addClass('is-invalid');
+        },
+        unhighlight: function (element) {
+            $(element).removeClass('is-invalid');
+        }
+    })
+
     _$form.find('.save-button').click(async function (e) {
         e.preventDefault();
+
+        if ($('#editionsContainer .edition-item').length === 0) {
+            abp.notify.error(l('BookMustHaveAtLeastOneEdition'));
+            return;
+        }
 
         if (!_$form.valid()) {
             return;
@@ -268,8 +388,8 @@
                 <div class="col-md-3">
                     <label class="fw-bold">${l('Format')}</label>
                     <select name="Format" class="form-select form-control">
-                        <option value="0">Hardcover</option>
-                        <option value="1">Paperback</option>
+                        <option value="0">${l('Hardcover')}</option>
+                        <option value="1">${l('Paperback')}</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -290,11 +410,38 @@
             </div>
         </div>`;
         $('#editionsContainer').append(editionHtml);
+
+        _$form.validate().settings.rules[`Editions[${editionIndex}].Format`] = { required: true };
+        _$form.validate().settings.rules[`Editions[${editionIndex}].ISBN`] = {
+            required: true,
+            digits: true,
+            isbnLength: true
+        };
+        _$form.validate().settings.rules[`Editions[${editionIndex}].Publisher`] = {
+            required: true,
+            maxlength: 200
+        };
+        _$form.validate().settings.rules[`Editions[${editionIndex}].PublishedDate`] = {
+            required: true,
+            dateISO: true,
+            max: function () {
+                var today = new Date();
+                today.setFullYear(today.getFullYear() + 1);
+                return today.toISOString().split('T')[0];
+            }
+        };
     });
 
     // Remove edition block
     $(document).on('click', '.btn-remove-edition', function () {
         $(this).closest('.edition-item').remove();
+        $('#editionsContainer .edition-item').each(function (i, el) {
+            $(el).find('[name]').each(function () {
+                const nameParts = $(this).attr('name').split('.');
+                const field = nameParts[1];
+                $(this).attr('name', `Editions[${i}].${field}`);
+            });
+        });
     });
 
     // Image preview
@@ -310,7 +457,7 @@
         const files = Array.from(this.files);
 
         if (files.length > MAX_FILES) {
-            abp.notify.error(`You can upload a maximum of ${MAX_FILES} images.`);
+            abp.notify.error(l('MaxTenImagesAllowed'));
             $(this).val('');
             selectedFiles = [];
             $('#imagePreview').empty();
@@ -378,59 +525,111 @@
         }
     }
 
-    function loadBookImages(bookId) {
+
+    function loadBookImages(bookId, $modal) {
         _bookService.getBookImages(bookId).done(function (images) {
-            console.log(images); // should log array
-
-            if (!images || !images.length) return;
-
-            const $preview = $('#imagePreview');
+            const $preview = $modal.find('#imagePreview');
             $preview.empty();
-
             images.forEach(img => {
-                const $col = $(`
-                <div class="col-6 mb-3">
-                    <div class="card">
+                const $cardWrapper = $(`
+                <div class="col-6 mb-3 card-wrapper">
+                    <div class="card" data-image-id="${img.id}">
                         <img src="${img.imagePath}" class="card-img-top" style="height:150px; object-fit:cover;" />
                         <div class="card-body p-2 d-flex justify-content-between align-items-center">
-                            <span class="small text-truncate" style="max-width: 120px;">${img.caption || ''}</span>
+                            <span class="small text-truncate" style="max-width:120px;">${img.caption || ''}</span>
                             <button type="button" class="btn btn-sm btn-danger ml-auto">×</button>
                         </div>
                     </div>
                 </div>
             `);
 
-                $col.find('button').on('click', function () {
-                    $col.remove();
+                // Mark for deletion, do NOT remove yet
+                $cardWrapper.find('button').on('click', function () {
+                    $cardWrapper.find('.card').addClass('deleted'); // mark
+                    $cardWrapper.hide(); // hide from view
                 });
 
-                $preview.append($col);
+                $preview.append($cardWrapper);
             });
         });
     }
 
-    function loadBookImagesAsLinks(bookId) {
+    // View book
+    $(document).on('click', '.view-book', function (e) {
+        e.preventDefault();
+        var bookId = $(this).data('book-id');
+        var $editionSelect = $('#selectEditionView');
+
         _bookService.getBookImages(bookId).done(function (images) {
-            console.log(images); // confirm array
-
-            if (!images || !images.length) {
-                $('#imageLinks').html('<p>No images found for this book.</p>');
-                return;
-            }
-
-            const $links = $('#imageLinks');
-            $links.empty();
-
-            images.forEach(img => {
-                const $a = $(`
-                <div class="mb-2">
-                    <a href="${img.imagePath}" target="_blank">${img.caption || img.imagePath}</a>
+            const $preview = $("#BookViewModal").find('#imagePreview');
+            $preview.empty();
+            if (images.length > 0) {
+                images.forEach(img => {
+                    const $cardWrapper = $(`
+                <div class="col-6 mb-3 card-wrapper">
+                    <div class="card" data-image-id="${img.id}">
+                        <img src="${img.imagePath}" class="card-img-top" style="height:150px; object-fit:cover;" />
+                        <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                            <span class="small text-truncate" style="max-width:120px;">${img.caption || ''}</span>
+                        </div>
+                    </div>
                 </div>
             `);
-                $links.append($a);
-            });
+                    $preview.append($cardWrapper);
+                });
+            } else {
+                $preview.append(`<p>${l('ThisBookDoesNotHaveImageYet')}</p>`);
+            }
         });
-    }
+
+        _bookService.getBook(bookId).done(async function (book) {
+            // Populate main book details inside the modal
+            const genres = await _bookService.getBookGenre();
+            let genreText = '-';
+            const genreItem = genres.find(g => Number(g.value) === Number(book.genre));
+            if (genreItem) genreText = genreItem.text;
+
+            $('#BookViewModal #titleView').text(book.title);
+            $('#BookViewModal #authorView').text(book.author);
+            $('#BookViewModal #genreView').text(genreText);
+            $('#BookViewModal #descriptionView').text(book.description || '-');
+
+            window.allEditions = book.editions || [];
+
+            // Populate editions dropdown
+            $editionSelect.empty();
+            window.allEditions.forEach(ed => {
+                const formatName = ed.format === 0 ? l('Hardcover') : l('Paperback');
+                $editionSelect.append(
+                    `<option value="${ed.id}" 
+                    data-format="${formatName}" 
+                    data-isbn="${ed.isbn || 'N/A'}" 
+                    data-publisher="${ed.publisher || 'N/A'}" 
+                    data-publisheddate="${ed.publishedDate ? ed.publishedDate.split('T')[0] : '-'}">
+                    ${formatName} - ${ed.isbn || 'N/A'}
+                </option>`
+                );
+            });
+
+            // Auto-select first edition if available and populate details
+            if (window.allEditions.length > 0) {
+                const firstEdition = window.allEditions[0];
+                $editionSelect.val(firstEdition.id).trigger('change');
+            }
+
+
+            $('#BookViewModal').modal('show');
+        });
+    });
+
+    // When edition selection changes, populate read-only fields
+    $('#selectEditionView').on('change', function () {
+        var selected = $(this).find('option:selected');
+        $('#formatView').text(selected.data('format') || '-');
+        $('#isbnView').text(selected.data('isbn') || '-');
+        $('#publisherView').text(selected.data('publisher') || '-');
+        $('#publishedDateView').text(selected.data('publisheddate') || '-');
+    });
 
 
     //Import
